@@ -43,7 +43,7 @@
 const TARGET_URL = "https://www.google.com";
 
 // Delay (ms) — tweak per device/network
-const DELAY_MS = 2500;
+const DELAY_MS = 3500;
 
 // Pilih SATU security-sensitive API di bawah
 async function triggerSecurityUI() {
@@ -53,10 +53,10 @@ async function triggerSecurityUI() {
 
   // await window.showOpenFilePicker();
 
-   await window.showDirectoryPicker();
+  // await window.showDirectoryPicker();
 
   // === Web Share API ===
-  // await navigator.share({ title: "Test", text: "Hello", url: "https://example.com" });
+   await navigator.share({ title: "Test", text: "Hello", url: "https://google.com" });
 
   // === External Protocol / Intent ===
   // location.href = "tel:123456789";
