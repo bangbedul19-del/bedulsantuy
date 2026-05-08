@@ -1,0 +1,12 @@
+<html>
+<body>
+    <h1>Sandbox Escape Test</h1>
+    <!-- Simulasi Iframe yang di-sandbox -->
+    <iframe 
+        sandbox="allow-same-origin allow-forms" 
+        srcdoc="<html><head><meta http-equiv='refresh' content='2; url=https://google.com'></head><body>Pindah ke Google via Meta...</body></html>"
+        style="width:400px; height:200px;">
+    </iframe>
+    <p>Jika browser pindah ke Google di jendela utama, berarti Meta Refresh membypass restriksi sandbox.</p>
+</body>
+</html>
