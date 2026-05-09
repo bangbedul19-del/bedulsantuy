@@ -1,0 +1,97 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Fullscreen Gesture Propagation Test</title>
+<style>
+    body { font-family: sans-serif; padding: 20px; line-height: 1.6; }
+    button { padding: 15px 25px; font-size: 16px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 5px; }
+    button:hover { background: #0056b3; }
+    pre { background: #111; color: #0f0; padding: 15px; border-radius: 5px; overflow-x: auto; margin-top: 20px; }
+    .note { color: #555; font-size: 0.9em; margin-top: 10px; }
+</style>
+</head>
+<body>
+
+<h3>Fullscreen Gesture Enforcement Test</h3>
+<p>Klik tombol di bawah untuk membuka popup <code>about:blank</code>, memicu Fullscreen via script injection, lalu navigasi ke target.</p>
+
+<button id="btn">Jalankan Test Fullscreen</button>
+
+<pre id="log">Laporan Log:
+----------------</pre>
+
+<script>
+const logEl = document.getElementById("log");
+const log = m => logEl.textContent += "\n" + m;
+
+document.getElementById("btn").onclick = () => {
+    log("[1] User click diterima pada jendela induk.");
+
+    // 1️⃣ Buka popup ke about:blank
+    const w = window.open(
+        "about:blank",
+        "testPopup",
+        `width=600,height=400,left=100,top=100`
+    );
+
+    if (!w) {
+        log("[ERROR] Popup diblokir! Pastikan izin popup aktif.");
+        return;
+    }
+
+    log("[2] Jendela popup terbuka (about:blank).");
+
+    // 2️⃣ Injeksi payload Fullscreen ke about:blank
+    // Kita menggunakan try-catch di dalam inject untuk mendeteksi penolakan browser
+    w.document.write(`
+        <html>
+        <body style="background:black; color:white; display:flex; align-items:center; justify-content:center; height:100vh; margin:0;">
+            <div style="text-align:center;">
+                <h2>Memproses...</h2>
+                <p>Mencoba masuk mode Fullscreen otomatis...</p>
+            </div>
+            <script>
+                setTimeout(() => {
+                    document.documentElement.requestFullscreen()
+                        .then(() => {
+                            window.opener.postMessage("FS_SUCCESS", "*");
+                        })
+                        .catch((e) => {
+                            window.opener.postMessage("FS_FAILED: " + e.message, "*");
+                        });
+                }, 100);
+            <\/script>
+        </body>
+        </html>
+    `);
+
+    // Mendengarkan respon dari popup
+    window.addEventListener("message", function(event) {
+        if (typeof event.data === 'string') {
+            if (event.data === "FS_SUCCESS") {
+                log("[3] SUCCESS: Fullscreen berhasil dipicu di popup!");
+                
+                // 3️⃣ Navigasi setelah Fullscreen aktif
+                setTimeout(() => {
+                    log("[4] Mencoba navigasi ke Google...");
+                    w.location.href = "https://www.google.com";
+                    log("[5] Navigasi diperintahkan. Periksa apakah Fullscreen tertutup.");
+                }, 2000);
+
+            } else if (event.data.startsWith("FS_FAILED")) {
+                log("[ERROR] " + event.data);
+                log("Kesimpulan: Browser mewajibkan interaksi fisik langsung di dalam jendela popup.");
+            }
+        }
+    }, { once: true });
+};
+</script>
+
+<div class="note">
+    <strong>Tujuan Tes:</strong> 
+    Cek apakah notifikasi fullscreen muncul sebagai "about:blank" dan apakah status fullscreen bertahan saat berpindah ke google.com.
+</div>
+
+</body>
+</html>
