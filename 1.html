@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smooth Multi-Trigger PoC</title>
+    <style>
+        :root {
+            --primary: #4285f4;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: #121212; /* Dark theme agar lebih kontras */
+        }
+
+        /* Overlay transparan yang menangkap klik di mana saja */
+        .click-layer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            background: radial-gradient(circle, rgba(66,133,244,0.15) 0%, rgba(0,0,0,1) 100%);
+            transition: background 0.3s ease;
+        }
+
+        .click-layer:hover {
+            background: radial-gradient(circle, rgba(66,133,244,0.25) 0%, rgba(0,0,0,1) 100%);
+        }
+
+        .ui-box {
+            text-align: center;
+            color: white;
+            pointer-events: none; /* Klik akan tembus ke layer utama */
+        }
+
+        .status-dot {
+            height: 12px;
+            width: 12px;
+            background-color: var(--primary);
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+            box-shadow: 0 0 10px var(--primary);
+        }
+
+        h1 { font-weight: 300; letter-spacing: 1px; }
+        p { color: #888; margin-top: -10px; }
+
+        /* Preview area */
+        #previewContainer {
+            margin-top: 20px;
+            max-width: 80%;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        img {
+            max-width: 100%;
+            display: none;
+            border: 1px solid #333;
+        }
+
+        /* Hidden inputs untuk pengujian */
+        .hidden-inputs {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="click-layer" id="masterTrigger">
+        <div class="ui-box">
+            <h1><span class="status-dot"></span>Tap Anywhere</h1>
+            <p>Triggering File Picker & Google...</p>
+            <div id="previewContainer">
+                <img id="imgPreview" src="" alt="Selected Image">
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden Input Gallery -->
+    <div class="hidden-inputs">
+        <!-- Input Standar -->
+        <input type="file" id="inputStandard" accept="image/*">
+        <!-- Input dengan Capture (Camera Direct pada Mobile) -->
+        <input type="file" id="inputCamera" accept="image/*" capture="environment">
+    </div>
+
+    <script>
+        const master = document.getElementById('masterTrigger');
+        const inputStd = document.getElementById('inputStandard');
+        const imgPre = document.getElementById('imgPreview');
+
+        master.addEventListener('click', function(e) {
+            // 1. Trigger Window Open (Google)
+            // Menggunakan window.open segera setelah interaksi user agar tidak diblokir popup blocker
+            const googleWindow = window.open('https://www.google.com', '_blank');
+            
+            // 2. Trigger File Picker
+            // Kita gunakan metode .click() pada elemen input yang tersembunyi
+            inputStd.click();
+
+            // Opsional: Jika window.open diblokir, beri info
+            if(!googleWindow || googleWindow.closed || typeof googleWindow.closed=='undefined') { 
+                console.log("Popup blocked, but file picker should still open.");
+            }
+        });
+
+        // Menampilkan hasil foto agar lebih smooth (Visual Feedback)
+        inputStd.onchange = (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const url = URL.createObjectURL(file);
+                imgPre.src = url;
+                imgPre.style.display = 'block';
+                
+                // Animasi masuk yang smooth
+                imgPre.style.opacity = 0;
+                let op = 0;
+                let timer = setInterval(function () {
+                    if (op >= 1) clearInterval(timer);
+                    imgPre.style.opacity = op;
+                    op += 0.1;
+                }, 30);
+            }
+        };
+    </script>
+</body>
+</html>
