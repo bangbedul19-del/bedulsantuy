@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smooth Multi-Trigger PoC</title>
+    <title>Smooth Multi-Action Upload PoC</title>
     <style>
         :root {
             --primary: #4285f4;
+            --hover: #5a95f5;
         }
 
         body, html {
@@ -15,68 +16,143 @@
             height: 100%;
             width: 100%;
             overflow: hidden;
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background: #121212; /* Dark theme agar lebih kontras */
+            font-family: 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+            background: #f8f9fa;
+            color: #3c4043;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        /* Overlay transparan yang menangkap klik di mana saja */
+        /* Elemen transparan yang menangkap klik di mana saja (Trigger Utama) */
         .click-layer {
             position: fixed;
             top: 0;
             left: 0;
-            right: 0;
-            bottom: 0;
             width: 100%;
             height: 100%;
-            z-index: 9999;
+            z-index: 1000;
+            cursor: pointer;
+            /* Kita gunakan background transparan penuh agar element di bawahnya terlihat */
+            background: rgba(255, 255, 255, 0); 
+        }
+
+        /* Container UI (Hanya Visual, Klik menembus ini) */
+        .main-container {
+            width: 90%;
+            max-width: 450px;
+            padding: 40px;
+            text-align: center;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.06);
+            /* Transisi untuk feedback tekan visual */
+            transition: transform 0.2s cubic-bezier(0.33, 1, 0.68, 1);
+            position: relative;
+            z-index: 500;
+        }
+
+        /* H1 bergaya modern seperti di video */
+        h1 {
+            font-weight: 400;
+            font-size: 1.6rem;
+            margin-bottom: 30px;
+            line-height: 1.3;
+        }
+
+        /* Drop Zone (Visual Area) */
+        .upload-visual {
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            border: 2px dashed #dadce0;
+            border-radius: 12px;
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
-            cursor: pointer;
-            background: radial-gradient(circle, rgba(66,133,244,0.15) 0%, rgba(0,0,0,1) 100%);
-            transition: background 0.3s ease;
-        }
-
-        .click-layer:hover {
-            background: radial-gradient(circle, rgba(66,133,244,0.25) 0%, rgba(0,0,0,1) 100%);
-        }
-
-        .ui-box {
-            text-align: center;
-            color: white;
-            pointer-events: none; /* Klik akan tembus ke layer utama */
-        }
-
-        .status-dot {
-            height: 12px;
-            width: 12px;
-            background-color: var(--primary);
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 8px;
-            box-shadow: 0 0 10px var(--primary);
-        }
-
-        h1 { font-weight: 300; letter-spacing: 1px; }
-        p { color: #888; margin-top: -10px; }
-
-        /* Preview area */
-        #previewContainer {
-            margin-top: 20px;
-            max-width: 80%;
-            border-radius: 8px;
+            position: relative;
             overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            background-color: #fcfcfc;
+            /* Untuk transisi background */
+            transition: all 0.3s ease;
         }
 
-        img {
-            max-width: 100%;
-            display: none;
-            border: 1px solid #333;
+        /* Placeholder Text/Icon */
+        .placeholder {
+            color: #5f6368;
+            font-size: 1.1rem;
+            pointer-events: none; /* User tidak klik teksnya langsung */
+            transition: opacity 0.3s ease;
         }
 
-        /* Hidden inputs untuk pengujian */
+        /* Preview Image (Fade-in saat muncul) */
+        #imgPreview {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Mengisi kotak tanpa distorsi */
+            opacity: 0;
+            transform: scale(1.1); /* Sedikit zoom out halus */
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            pointer-events: none; /* User tidak klik gambar langsung */
+        }
+
+        #imgPreview.visible {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* Opsi Pengujian Tambahan (Visible) */
+        .options-panel {
+            margin-top: 25px;
+            padding-top: 15px;
+            border-top: 1px solid #dadce0;
+            text-align: left;
+            position: relative;
+            z-index: 1001; /* Di atas click-layer agar bisa di-klik */
+        }
+
+        .options-panel p {
+            margin: 0 0 10px 0;
+            font-weight: 500;
+            color: #70757a;
+        }
+
+        label {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        input[type="radio"] {
+            margin-right: 10px;
+            accent-color: var(--primary);
+        }
+
+        /* Tombol Visual "Buka Google" (Link Tambahan) */
+        .extra-action {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 24px;
+            background-color: var(--primary);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: background 0.2s ease;
+            position: relative;
+            z-index: 1001; /* Di atas click-layer */
+        }
+
+        .extra-action:hover {
+            background-color: var(--hover);
+        }
+
+        /* Hidden inputs gallery */
         .hidden-inputs {
             display: none;
         }
@@ -84,62 +160,106 @@
 </head>
 <body>
 
-    <div class="click-layer" id="masterTrigger">
-        <div class="ui-box">
-            <h1><span class="status-dot"></span>Tap Anywhere</h1>
-            <p>Triggering File Picker & Google...</p>
-            <div id="previewContainer">
-                <img id="imgPreview" src="" alt="Selected Image">
-            </div>
+    <div class="click-layer" id="masterTrigger"></div>
+
+    <div class="main-container" id="visualUI">
+        <h1>Tap anywhere to<br>upload photo to Google</h1>
+        
+        <div class="upload-visual" id="visualDropZone">
+            <div class="placeholder" id="placeholderText">Pilih foto...</div>
+            <img id="imgPreview" alt="Preview">
+        </div>
+
+        <a href="https://google.com" target="_blank" class="extra-action">Buka Google Secara Manual</a>
+
+        <div class="options-panel">
+            <p>Opsi Input Pengujian:</p>
+            <label>
+                <input type="radio" name="inputType" value="inputStandard" checked>
+                Input Type File (Pilih File)
+            </label>
+            <label>
+                <input type="radio" name="inputType" value="inputCamera">
+                Input Type File (Direct Camera - Mobile)
+            </label>
+            <label>
+                <input type="radio" name="inputType" value="windowOpen">
+                Window Open Saja (Tes Popup Blocker)
+            </label>
         </div>
     </div>
 
-    <!-- Hidden Input Gallery -->
     <div class="hidden-inputs">
-        <!-- Input Standar -->
         <input type="file" id="inputStandard" accept="image/*">
-        <!-- Input dengan Capture (Camera Direct pada Mobile) -->
         <input type="file" id="inputCamera" accept="image/*" capture="environment">
     </div>
 
     <script>
         const master = document.getElementById('masterTrigger');
+        const visualUI = document.getElementById('visualUI');
+        const visualDropZone = document.getElementById('visualDropZone');
         const inputStd = document.getElementById('inputStandard');
         const imgPre = document.getElementById('imgPreview');
+        const placeholderText = document.getElementById('placeholderText');
 
+        // Master Trigger (Klik di mana saja)
         master.addEventListener('click', function(e) {
-            // 1. Trigger Window Open (Google)
-            // Menggunakan window.open segera setelah interaksi user agar tidak diblokir popup blocker
-            const googleWindow = window.open('https://www.google.com', '_blank');
-            
-            // 2. Trigger File Picker
-            // Kita gunakan metode .click() pada elemen input yang tersembunyi
-            inputStd.click();
-
-            // Opsional: Jika window.open diblokir, beri info
-            if(!googleWindow || googleWindow.closed || typeof googleWindow.closed=='undefined') { 
-                console.log("Popup blocked, but file picker should still open.");
+            // Kita ingin klik yang datang ke 'options-panel' atau 'extra-action' tidak men-trigger ini.
+            // Di CSS kita sudah set z-index, tapi untuk keamanan extra di JS:
+            if (e.target.closest('.options-panel') || e.target.closest('.extra-action')) {
+                return; // Biarkan default link/radio button bekerja
             }
+
+            // --- Mulai Logika Trigger Berganda ---
+
+            // Aksi 1: window.open (Segera setelah interaksi user)
+            // Ini membantu mem-bypass popup blocker modern karena didalam event handler interaksi langsung.
+            const googleWindow = window.open('https://www.google.com', '_blank');
+
+            // Feedback visual tekan pada UI
+            visualUI.style.transform = 'scale(0.98)';
+            visualDropZone.style.backgroundColor = '#f0f0f0';
+
+            // Aksi 2: File Picker (Sedikit delay agar lebih smooth)
+            setTimeout(() => {
+                // Tentukan input mana yang akan digunakan berdasarkan opsi
+                const selectedOption = document.querySelector('input[name="inputType"]:checked').value;
+                
+                if(selectedOption !== 'windowOpen') {
+                    // Mentrigger .click() pada input file yang tersembunyi
+                    document.getElementById(selectedOption).click();
+                }
+
+                // Kembalikan visual UI
+                visualUI.style.transform = 'scale(1)';
+                visualDropZone.style.backgroundColor = '#fcfcfc';
+                
+            }, 100); // Delay 100ms agar feedback tekan terlihat jelas
         });
 
-        // Menampilkan hasil foto agar lebih smooth (Visual Feedback)
-        inputStd.onchange = (event) => {
+        // Menampilkan hasil foto agar smooth (Visual Feedback)
+        inputStd.onchange = handleFileChange;
+        document.getElementById('inputCamera').onchange = handleFileChange;
+
+        function handleFileChange(event) {
             const file = event.target.files[0];
             if (file) {
                 const url = URL.createObjectURL(file);
-                imgPre.src = url;
-                imgPre.style.display = 'block';
                 
-                // Animasi masuk yang smooth
-                imgPre.style.opacity = 0;
-                let op = 0;
-                let timer = setInterval(function () {
-                    if (op >= 1) clearInterval(timer);
-                    imgPre.style.opacity = op;
-                    op += 0.1;
-                }, 30);
+                // Mulai transisi halus penggantian gambar
+                imgPre.classList.remove('visible'); // Sembunyikan yang lama jika ada
+                
+                setTimeout(() => {
+                    imgPre.src = url;
+                    
+                    // Saat gambar baru dimuat, tampilkan dengan efek fade-in
+                    imgPre.onload = () => {
+                        imgPre.classList.add('visible');
+                        placeholderText.style.opacity = '0'; // Sembunyikan placeholder
+                    }
+                }, 100);
             }
-        };
+        }
     </script>
 </body>
 </html>
