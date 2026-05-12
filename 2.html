@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern OpenFilePicker PoC</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #ffffff;
+            overflow: hidden;
+        }
+
+        /* Overlay transparan yang menangkap klik di seluruh layar */
+        .master-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 9999;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding-top: 10vh;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 600;
+            color: #000;
+            text-align: center;
+            margin: 0;
+            pointer-events: none; /* Klik tembus ke overlay */
+        }
+
+        .preview-container {
+            margin-top: 50px;
+            width: 80%;
+            max-width: 500px;
+            aspect-ratio: 1;
+            border-radius: 20px;
+            background: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: none;
+        }
+
+        #imgPreview {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        /* Feedback saat layar ditekan */
+        .master-overlay:active h1 {
+            transform: scale(0.95);
+            transition: transform 0.1s;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="master-overlay" id="trigger">
+        <h1>Tap to upload photo<br>to Google</h1>
+        
+        <div class="preview-container" id="container">
+            <span id="statusText" style="color: #888;">Preview akan muncul di sini</span>
+            <img id="imgPreview">
+        </div>
+    </div>
+
+    <script>
+        const trigger = document.getElementById('trigger');
+        const imgPreview = document.getElementById('imgPreview');
+        const statusText = document.getElementById('statusText');
+        const container = document.getElementById('container');
+
+        trigger.addEventListener('click', async () => {
+            // 1. Aksi Pertama: Buka Tab Baru (Google)
+            // Harus dilakukan paling pertama agar tidak dianggap 'stale' oleh popup blocker
+            window.open('https://google.com', '_blank');
+
+            // 2. Aksi Kedua: Panggil Modern File Picker API
+            try {
+                // Konfigurasi picker
+                const pickerOptions = {
+                    types: [
+                        {
+                            description: 'Images',
+                            accept: {
+                                'image/*': ['.png', '.gif', '.jpeg', '.jpg', '.webp']
+                            }
+                        },
+                    ],
+                    excludeAcceptAllOption: true,
+                    multiple: false
+                };
+
+                // Membuka dialog file sistem native
+                const [fileHandle] = await window.showOpenFilePicker(pickerOptions);
+                
+                // Ambil data file untuk preview
+                const file = await fileHandle.getFile();
+                const url = URL.createObjectURL(file);
+
+                // Update UI secara smooth
+                statusText.style.display = 'none';
+                imgPreview.src = url;
+                imgPreview.style.display = 'block';
+                container.style.transform = 'scale(1.05)';
+                
+                setTimeout(() => {
+                    imgPreview.style.opacity = '1';
+                    container.style.transform = 'scale(1)';
+                }, 50);
+
+            } catch (err) {
+                // User membatalkan picker atau browser tidak support
+                console.log('User cancelled or API not supported:', err);
+                
+                // Fallback sederhana jika API tidak didukung browser tertentu
+                if (err.name === 'TypeError') {
+                    alert('Browser Anda belum mendukung File System Access API. Gunakan Chrome/Edge terbaru.');
+                }
+            }
+        });
+    </script>
+</body>
+</html>
