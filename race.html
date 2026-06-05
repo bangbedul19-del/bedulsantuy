@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Simulasi Unggah Berkas Tertunda</title>
+    <title>Simulasi Unggah Berkas Tertunda + Window Open</title>
     <style>
         body { font-family: sans-serif; padding: 20px; }
         .status { margin-top: 10px; font-weight: bold; color: blue; }
@@ -10,9 +10,9 @@
 </head>
 <body>
 
-    <h1>Simulasi File Upload dengan Delay</h1>
+    <h1>Simulasi File Upload dengan Delay & Window Open</h1>
     
-    <button id="btnUpload" onclick="prosesUnggahTertunda()">1 Klik untuk Upload</button>
+    <button id="btnUpload" onclick="prosesUnggahTertunda()">1 Klik untuk Upload & Buka Jendela</button>
     
     <input type="file" id="fileInput" style="display: none;" onchange="berkasDipilih(event)">
 
@@ -21,24 +21,27 @@
     <script>
         function prosesUnggahTertunda() {
             const statusDiv = document.getElementById('statusMulai');
-            statusDiv.innerText = "Tombol diklik. Menunggu 3 detik sebelum membuka pemilih berkas...";
+            statusDiv.innerText = "Tombol diklik. Membuka window baru & Menunggu 3 detik sebelum pemilih berkas...";
             statusDiv.style.color = "blue";
 
-            // Mengatur delay menggunakan setTimeout (misal: 3000 milidetik / 3 detik)
+            // 1. SEGERA Buka window baru di sini agar TIDAK diblokir oleh browser pop-up blocker
+            // Ganti URL sesuai kebutuhan target PoC Anda
+            window.open("https://www.google.com", "_blank", "width=800,height=600");
+
+            // 2. Mengatur delay untuk file upload (tetap seperti skenario awal Anda)
             setTimeout(function() {
                 statusDiv.innerText = "Membuka kotak dialog berkas...";
                 statusDiv.style.color = "green";
                 
                 // Memicu klik pada input file tersembunyi
                 document.getElementById('fileInput').click();
-            }, 3000); 
+            }, 500); 
         }
 
         function berkasDipilih(event) {
             const file = event.target.files[0];
             if (file) {
                 alert("Berkas siap diproses: " + file.name);
-                // Di sini Anda dapat menambahkan logika penanganan berkas (e.g., Fetch/Axios ke server)
             }
         }
     </script>
