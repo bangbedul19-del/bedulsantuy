@@ -1,0 +1,595 @@
+<title>Dia Address Bar Tests</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500;600&display=swap">
+
+<style>
+/* dark-first security tool */
+:root {
+  --bg: #0a0e13;
+  --surface: #131920;
+  --surface-2: #1a2230;
+  --border: #1e2d3d;
+  --fg: #cdd9e5;
+  --fg-muted: #6e7f8e;
+  --accent: #4fc1ff;
+  --accent-dim: rgba(79,193,255,.12);
+  --ok: #57ab5a;
+  --warn: #c69026;
+  --fail: #e5534b;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #f5f7fa; --surface: #fff; --surface-2: #eef1f5;
+    --border: #d3dae3; --fg: #1c2632; --fg-muted: #5e6c7a;
+    --accent: #0872c0; --accent-dim: rgba(8,114,192,.08);
+    --ok: #1c7d35; --warn: #9a6800; --fail: #c42b2b;
+    color-scheme: light;
+  }
+}
+:root[data-theme="light"] {
+  --bg: #f5f7fa; --surface: #fff; --surface-2: #eef1f5;
+  --border: #d3dae3; --fg: #1c2632; --fg-muted: #5e6c7a;
+  --accent: #0872c0; --accent-dim: rgba(8,114,192,.08);
+  --ok: #1c7d35; --warn: #9a6800; --fail: #c42b2b;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 14px; line-height: 1.6; margin: 0;
+  padding: 16px; max-width: 920px; margin-inline: auto;
+}
+header { padding-block: 20px 16px; border-bottom: 1px solid var(--border); margin-bottom: 24px; }
+header h1 {
+  font-size: 17px; font-weight: 600; margin: 0 0 6px;
+  display: flex; align-items: center; gap: 8px;
+}
+.badge {
+  font-size: 10px; font-family: 'JetBrains Mono', monospace;
+  background: var(--accent-dim); color: var(--accent);
+  padding: 2px 7px; border-radius: 4px; font-weight: 600; letter-spacing: .06em;
+}
+.origin-row {
+  font-family: 'JetBrains Mono', monospace; font-size: 12px;
+  color: var(--fg-muted); display: flex; align-items: center; gap: 6px;
+}
+.origin-row span { color: var(--accent); }
+.section { margin-bottom: 28px; }
+.section-label {
+  font-size: 11px; font-weight: 600; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--fg-muted);
+  margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
+}
+.section-label::after { content:''; flex:1; height:1px; background:var(--border); }
+.test-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(270px,1fr)); gap: 10px;
+}
+.test-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; padding: 14px; transition: border-color .15s;
+}
+.test-card:hover { border-color: rgba(79,193,255,.35); }
+.test-card h3 { font-size: 13px; font-weight: 600; margin: 0 0 5px; }
+.test-card p { font-size: 12px; color: var(--fg-muted); margin: 0 0 11px; line-height: 1.5; }
+code {
+  font-family: 'JetBrains Mono', monospace; font-size: 11px;
+  background: var(--surface-2); padding: 1px 4px; border-radius: 3px;
+}
+.btn-row { display: flex; gap: 6px; flex-wrap: wrap; }
+.btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 5px 11px; border-radius: 5px; border: 1px solid var(--border);
+  background: var(--surface-2); color: var(--fg); font-size: 12px;
+  font-weight: 500; cursor: pointer; transition: all .12s; font-family: inherit;
+}
+.btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+.btn-p { background: var(--accent-dim); border-color: rgba(79,193,255,.4); color: var(--accent); }
+.btn-p:hover { border-color: var(--accent); }
+.log-panel {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; overflow: hidden; margin-top: 20px;
+}
+.log-hdr {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 9px 14px; border-bottom: 1px solid var(--border);
+  font-size: 12px; font-weight: 600;
+}
+.dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--ok); display: inline-block; margin-right: 6px;
+  animation: pulse 2.2s infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+#log { font-family:'JetBrains Mono',monospace; font-size:11px;
+  padding:8px; max-height:200px; overflow-y:auto;
+  display:flex; flex-direction:column; gap:2px; }
+.le { padding:3px 8px; border-radius:3px; display:flex; gap:10px; align-items:baseline; }
+.le:hover { background:var(--surface-2); }
+.lt { color:var(--fg-muted); flex-shrink:0; }
+.lk { flex-shrink:0; font-weight:600; }
+.lk.ok { color:var(--ok); }
+.lk.warn { color:var(--warn); }
+.lk.info { color:var(--accent); }
+.lm { color:var(--fg-muted); word-break:break-all; min-width:0; }
+.lm b { color:var(--fg); font-weight:normal; }
+.note {
+  background: var(--surface-2); border:1px solid var(--border);
+  border-left:3px solid var(--warn); border-radius:0 6px 6px 0;
+  padding:10px 14px; font-size:12px; color:var(--fg-muted); margin-top:14px;
+}
+.note strong { color:var(--warn); }
+.observe-tip {
+  font-size:11px; font-family:'JetBrains Mono',monospace;
+  color:var(--ok); margin-top:6px; padding:2px 0;
+}
+</style>
+
+<header>
+  <h1>
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="var(--accent)"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zM0 8a8 8 0 1116 0A8 8 0 010 8z"/><rect x="7.25" y="3.5" width="1.5" height="1.5" rx=".75"/><rect x="7.25" y="6.5" width="1.5" height="5" rx=".5"/></svg>
+    Dia Address Bar Spoof Test Suite <span class="badge">SECURITY RESEARCH</span>
+  </h1>
+  <div class="origin-row">
+    Current origin: <span id="cur-origin">—</span>
+  </div>
+</header>
+
+<!-- 1. History API -->
+<div class="section">
+  <div class="section-label">History / Navigation API</div>
+  <div class="test-grid">
+
+    <div class="test-card">
+      <h3>pushState path change</h3>
+      <p>Calls <code>history.pushState</code> to change the visible path without navigation. Origin stays the same — check what Dia shows in the bar.</p>
+      <div class="observe-tip">→ Bar should still reflect real origin</div>
+      <br>
+      <div class="btn-row">
+        <button class="btn btn-p" onclick="testPushState()">Run</button>
+        <button class="btn" onclick="restoreURL()">Restore</button>
+      </div>
+    </div>
+
+    <div class="test-card">
+      <h3>replaceState URL change</h3>
+      <p>Uses <code>history.replaceState</code> to swap the current URL entry. Same-origin — verify Dia updates the bar promptly and accurately.</p>
+      <div class="observe-tip">→ Bar should update to new path</div>
+      <br>
+      <div class="btn-row">
+        <button class="btn btn-p" onclick="testReplaceState()">Run</button>
+        <button class="btn" onclick="restoreURL()">Restore</button>
+      </div>
+    </div>
+
+    <div class="test-card">
+      <h3>Rapid navigation race</h3>
+      <p>Fires multiple <code>pushState</code> calls in fast succession. Tests whether URL bar can briefly lag, showing stale URL while new content loads.</p>
+      <div class="observe-tip">→ Look for brief wrong URL during transitions</div>
+      <br>
+      <div class="btn-row">
+        <button class="btn btn-p" onclick="testRapidNav()">Run</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- 2. Popup & Window -->
+<div class="section">
+  <div class="section-label">Popup &amp; Window</div>
+  <div class="test-grid">
+
+    <div class="test-card">
+      <h3>Chromeless popup</h3>
+      <p>Opens a popup via <code>window.open(...,'popup')</code> with size constraints. Does Dia show the origin in the popup's address bar or omit it?</p>
+      <div class="observe-tip">→ Popup bar should show blob: or artifact origin</div>
+      <br>
+      <div class="btn-row">
+        <button class="btn btn-p" onclick="testChromelessPopup()">Open popup</button>
+      </div>
+    </div>
+
+    <div class="test-card">
+      <h3>about:blank + write()</h3>
+      <p>Opens <code>about:blank</code> then injects HTML via <code>document.write()</code>. What origin does Dia display? Should be <code>about:blank</code>, not opener's origin.</p>
+      <div class="observe-tip">→ Bar should remain about:blank</div>
+      <br>
+      <div class="btn-row">
+        <button class="btn btn-p" onclick="testAboutBlankInject()">Open &amp; inject</button>
+      </div>
+    </div>
+
+    <div class="test-card">
+      <h3>Opener-navigated popup</h3>
+      <p>Opens popup, then navigates it to a blob: URL via <code>popup.location.href</code>. Verify Dia's bar updates correctly after opener-triggered navigation.</p>
+      <div class="observe-tip">→ Bar must reflect final URL after navigation</div>
+      <br>
+      <div class="btn-row">
+        <button class="btn btn-p" onclick="testPopupNav()">Run</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- 3. Special URIs -->
+<div class="section">
+  <div class="section-label">Special URI Schemes</div>
+  <div class="test-grid">
+
+    <div class="test-card">
+      <h3>data: URI display</h3>
+      <p>Opens a <code>data:text/html</code> page in a new tab. Dia should show the full data: URI or a <code>null</code> origin — not a spoofed domain.</p>
+      <div class="observe-tip">→ Bar: full data: URI or null origin</div>
+      <br>
+      <div class="btn-row">
+        <button class="btn btn-p" onclick="testDataURI()">Open tab</button>
+      </div>
+    </div>
+
+    <div class="test-card">
+      <h3>blob: URL origin</h3>
+      <p>Creates a <code>blob:</code> URL from this origin and opens it. Dia should show <code>blob:&lt;origin&gt;/...</code> — the generating origin must be visible.</p>
+      <div class="observe-tip">→ Bar: blob:&lt;this-origin&gt;/uuid</div>
+      <br>
+      <div class="btn-row">
+        <button class="btn btn-p" onclick="testBlobURL()">Open tab</button>
+      </div>
+    </div>
+
+    <div class="test-card">
+      <h3>javascript: link test</h3>
+      <p>A <code>javascript:</code> href that replaces page content should not leave the old origin showing in the bar. Test link is created but not auto-followed.</p>
+      <div class="observe-tip">→ Navigate link manually; bar should update</div>
+      <br>
+      <div class="btn-row">
+        <button class="btn btn-p" onclick="testJSLink()">Create link</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- 4. URL Display -->
+<div class="section">
+  <div class="section-label">URL Display Edge Cases</div>
+  <div class="test-grid">
+
+    <div class="test-card">
+      <h3>Long URL truncation</h3>
+      <p>Sets a very long path via pushState. Check if Dia's truncation hides the true path in a misleading way (e.g. truncating before <code>/admin</code>).</p>
+      <div class="observe-tip">→ Full origin must remain visible</div>
+      <br>
+      <div class="btn-row">
+        <button class="btn btn-p" onclick="testLongURL()">Run</button>
+        <button class="btn" onclick="restoreURL()">Restore</button>
+      </div>
+    </div>
+
+    <div class="test-card">
+      <h3>Userinfo@host pattern</h3>
+      <p>The URL <code>https://site.example@attacker.test/</code> should display <code>attacker.test</code>, not <code>site.example</code>. Manual test — enter in Dia's bar directly.</p>
+      <div class="observe-tip">→ Displayed host must be attacker.test</div>
+      <br>
+      <div class="btn-row">
+        <button class="btn btn-p" onclick="testUserinfoNote()">Show example URL</button>
+      </div>
+    </div>
+
+    <div class="test-card">
+      <h3>Fragment navigation</h3>
+      <p>Changes the URL fragment via <code>location.hash</code>. Encoded separators in the hash should not be decoded in a way that changes the perceived path.</p>
+      <div class="observe-tip">→ Origin must not change</div>
+      <br>
+      <div class="btn-row">
+        <button class="btn btn-p" onclick="testFragment()">Run</button>
+        <button class="btn" onclick="location.hash=''; log('info','Reset','fragment cleared')">Clear</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- 5. Fullscreen / UI Chrome -->
+<div class="section">
+  <div class="section-label">Fullscreen &amp; UI Chrome</div>
+  <div class="test-grid">
+
+    <div class="test-card">
+      <h3>Fullscreen URL bar visibility</h3>
+      <p>Enters fullscreen. In some browsers the URL bar disappears entirely. If so, a custom fake bar drawn by the page could replace it.</p>
+      <div class="observe-tip">→ Does Dia show any origin indicator in fullscreen?</div>
+      <br>
+      <div class="btn-row">
+        <button class="btn btn-p" onclick="enterFS()">Enter fullscreen</button>
+        <button class="btn" onclick="exitFS()">Exit</button>
+      </div>
+    </div>
+
+    <div class="test-card">
+      <h3>Fake URL bar overlay</h3>
+      <p>Draws a fixed-position fake address bar at the top of the page. In normal mode it sits below the real bar. In fullscreen, if the real bar hides, this overlay becomes credible.</p>
+      <div class="observe-tip">→ Combine with fullscreen test above</div>
+      <br>
+      <div class="btn-row">
+        <button class="btn btn-p" onclick="showFakeBar()">Show overlay</button>
+        <button class="btn" onclick="removeFakeBar()">Remove</button>
+      </div>
+    </div>
+
+    <div class="test-card">
+      <h3>Scroll + fixed overlay</h3>
+      <p>Scrolls to a position where a sticky element covers the top of the viewport. Tests if Dia's address bar is obscured by overlapping page content.</p>
+      <div class="observe-tip">→ Real browser bar must remain above page content</div>
+      <br>
+      <div class="btn-row">
+        <button class="btn btn-p" onclick="testStickyOverlay()">Run</button>
+        <button class="btn" onclick="removeStickyOverlay()">Remove</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="note">
+  <strong>How to document:</strong> For each test, capture a screenshot of the Dia address bar <em>before</em> and <em>after</em>. A vulnerability exists when the displayed origin/URL differs from the true document origin (<code id="note-origin">—</code>). Record Dia version from <em>Help → About</em>.
+</div>
+
+<!-- Log -->
+<div class="log-panel">
+  <div class="log-hdr">
+    <span><span class="dot"></span>Test Log</span>
+    <button class="btn" style="padding:2px 8px;font-size:11px" onclick="clearLog()">Clear</button>
+  </div>
+  <div id="log"></div>
+</div>
+
+<script>
+'use strict';
+
+const originEl = document.getElementById('cur-origin');
+const noteOriginEl = document.getElementById('note-origin');
+originEl.textContent = noteOriginEl.textContent = location.origin;
+
+let savedURL = location.href;
+
+// ── Logger ──────────────────────────────────────────────────────────────────
+function log(level, label, msg) {
+  const el = document.getElementById('log');
+  const t = new Date().toTimeString().slice(0,8);
+  const row = document.createElement('div');
+  row.className = 'le';
+  row.innerHTML = `<span class="lt">${t}</span><span class="lk ${level}">[${label}]</span><span class="lm">${msg}</span>`;
+  el.prepend(row);
+}
+function clearLog() { document.getElementById('log').innerHTML = ''; }
+
+function restoreURL() {
+  history.pushState(null, '', savedURL);
+  log('info', 'Restore', `URL restored to <b>${savedURL}</b>`);
+  originEl.textContent = location.origin;
+}
+
+// ── 1. History API ────────────────────────────────────────────────────────
+function testPushState() {
+  const newPath = '/user/settings/security?tab=sessions';
+  history.pushState({ saved: savedURL }, '', newPath);
+  log('warn', 'pushState', `Bar may show: <b>${location.origin + newPath}</b> — origin unchanged: <b>${location.origin}</b>`);
+  setTimeout(restoreURL, 6000);
+}
+
+function testReplaceState() {
+  const newPath = '/api/internal/admin/config';
+  history.replaceState(null, '', newPath);
+  log('warn', 'replaceState', `Replaced URL with <b>${newPath}</b> — origin still: <b>${location.origin}</b>`);
+  setTimeout(restoreURL, 5000);
+}
+
+function testRapidNav() {
+  const paths = ['/checkout/step1', '/checkout/step2', '/payment/process', '/api/auth/callback', '/dashboard/home'];
+  let i = 0;
+  log('info', 'RapidNav', 'Starting rapid pushState cycling…');
+  const id = setInterval(() => {
+    if (i >= paths.length) {
+      clearInterval(id);
+      restoreURL();
+      return;
+    }
+    history.pushState(null, '', location.origin + paths[i]);
+    log('info', 'RapidNav', `Step ${i+1}/5 → <b>${paths[i]}</b>`);
+    i++;
+  }, 350);
+}
+
+// ── 2. Popup & Window ────────────────────────────────────────────────────
+function makeTestPage(title, body) {
+  return `<!DOCTYPE html><html><head><title>${title}</title></head>
+<body style="font-family:system-ui;padding:24px;background:#0a0e13;color:#cdd9e5;margin:0">
+<div style="font-size:11px;font-family:monospace;background:#131920;border:1px solid #1e2d3d;
+  border-radius:6px;padding:8px 12px;margin-bottom:16px;color:#6e7f8e">
+  JS origin: <b style="color:#4fc1ff" id="o">—</b>
+</div>
+${body}
+<script>document.getElementById('o').textContent=location.origin+' '+location.href.slice(0,80)<\/script>
+</body></html>`;
+}
+
+function testChromelessPopup() {
+  const html = makeTestPage('Popup Origin Test',
+    '<h2 style="color:#4fc1ff;margin:0 0 8px">Popup: check address bar above</h2>' +
+    '<p style="color:#6e7f8e">This page was opened via window.open with popup feature.<br>Dia should show this page\'s true URL in the popup\'s address bar.</p>'
+  );
+  const blob = new Blob([html], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  const w = window.open(url, 'dia_test_popup', 'width=520,height=300,popup=1');
+  if (w) log('info', 'Popup', `Opened. Expected bar: <b>blob:${location.origin}/…</b>`);
+  else log('warn', 'Popup', 'Blocked — disable popup blocker for Dia and retry');
+}
+
+function testAboutBlankInject() {
+  const w = window.open('about:blank', '_blank', 'width=520,height=300');
+  if (!w) { log('warn', 'about:blank', 'Popup blocked'); return; }
+  setTimeout(() => {
+    try {
+      w.document.open();
+      w.document.write(makeTestPage('about:blank Inject Test',
+        '<h2 style="color:#c69026;margin:0 0 8px">Content injected via document.write()</h2>' +
+        '<p style="color:#6e7f8e">Opener: <b style="color:#cdd9e5">' + location.origin + '</b><br>' +
+        'Dia should still show <code style="background:#1a2230;padding:2px 5px;border-radius:3px">about:blank</code> in the address bar — not the opener\'s origin.</p>'
+      ));
+      w.document.close();
+      log('warn', 'about:blank', `Content injected from <b>${location.origin}</b> — bar should remain about:blank`);
+    } catch(e) {
+      log('warn', 'about:blank', `Write blocked: ${e.message}`);
+    }
+  }, 300);
+}
+
+function testPopupNav() {
+  const w = window.open('about:blank', '_blank', 'width=520,height=300');
+  if (!w) { log('warn', 'PopupNav', 'Popup blocked'); return; }
+  log('info', 'PopupNav', 'Popup opened at about:blank');
+  setTimeout(() => {
+    const html = makeTestPage('Navigated Popup',
+      '<h2 style="color:#57ab5a;margin:0 0 8px">Popup navigated by opener</h2>' +
+      '<p style="color:#6e7f8e">Opener used popup.location.href to navigate here (blob: URL).<br>Does Dia\'s address bar reflect this new URL?</p>'
+    );
+    const blob = new Blob([html], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    try { w.location.href = url; } catch(e) { log('warn', 'PopupNav', `Navigation blocked: ${e.message}`); return; }
+    log('warn', 'PopupNav', `Popup navigated to blob URL — check bar updated correctly`);
+  }, 800);
+}
+
+// ── 3. Special URIs ────────────────────────────────────────────────────────
+function testDataURI() {
+  const src = `data:text/html,<!DOCTYPE html><html><head><title>data: test</title></head>
+<body style="font-family:system-ui;padding:24px;background:%230a0e13;color:%23cdd9e5;margin:0">
+<h2 style="color:%234fc1ff">data: URI page</h2>
+<p>Check the Dia address bar. Should show full data: URI or null origin.</p>
+<p style="font-family:monospace;font-size:12px;background:%23131920;padding:8px;border-radius:6px">
+JS origin: <b id="o">—</b></p>
+<script>document.getElementById('o').textContent=location.origin<\/script>
+</body></html>`;
+  window.open(src, '_blank');
+  log('info', 'data:', 'Opened — bar should show data: URI or null, not a real origin');
+}
+
+function testBlobURL() {
+  const html = makeTestPage('blob: URL Test',
+    '<h2 style="color:#4fc1ff;margin:0 0 8px">blob: URL page</h2>' +
+    '<p style="color:#6e7f8e">Generated from <b style="color:#cdd9e5">' + location.origin + '</b> via Blob + createObjectURL().<br>' +
+    'Dia should show <code style="background:#1a2230;padding:2px 5px;border-radius:3px">blob:' + location.origin + '/…</code> in the address bar.</p>'
+  );
+  const blob = new Blob([html], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  window.open(url, '_blank');
+  log('info', 'blob:', `URL: <b>${url.slice(0, 55)}…</b>`);
+}
+
+function testJSLink() {
+  // Create a javascript: link for manual testing — never auto-navigate
+  const existing = document.getElementById('js-test-link');
+  if (existing) { existing.remove(); log('info', 'js-link', 'Link removed'); return; }
+  const a = document.createElement('a');
+  a.id = 'js-test-link';
+  a.href = 'javascript:document.body.innerHTML="<p style=padding:20px>Replaced via javascript: URL — what does the bar show?</p>"';
+  a.textContent = '⚡ javascript: test link (click manually to observe)';
+  a.style.cssText = 'display:block;margin-top:10px;font-family:monospace;font-size:12px;color:var(--warn);padding:8px 12px;background:var(--surface-2);border:1px dashed var(--warn);border-radius:6px;';
+  document.querySelector('.section:nth-child(3) .test-grid .test-card:last-child').appendChild(a);
+  log('warn', 'js-link', 'Link created — click it manually; observe what Dia shows in the address bar');
+}
+
+// ── 4. URL Display ────────────────────────────────────────────────────────
+function testLongURL() {
+  const pad = 'a'.repeat(110);
+  const path = `/${pad}/account/admin/security-settings`;
+  history.pushState(null, '', path);
+  log('warn', 'LongURL', `Path: <b>/${pad.slice(0,20)}…/account/admin/security-settings</b> — check if Dia truncates origin or hides /admin portion`);
+  setTimeout(restoreURL, 7000);
+}
+
+function testUserinfoNote() {
+  const example = `https://trusted.example@attacker-controlled.test/login`;
+  log('warn', 'Userinfo', `Example URL: <b>${example}</b>`);
+  log('info', 'Userinfo', 'Paste URL above into Dia address bar manually. True host is attacker-controlled.test');
+  // Show copyable field
+  const existing = document.getElementById('userinfo-field');
+  if (existing) { existing.remove(); return; }
+  const div = document.createElement('div');
+  div.id = 'userinfo-field';
+  div.style.cssText = 'margin-top:10px;display:flex;gap:6px;align-items:center;';
+  div.innerHTML = `<input readonly value="${example}" style="flex:1;font-family:monospace;font-size:11px;background:var(--surface-2);border:1px solid var(--border);border-radius:5px;padding:5px 8px;color:var(--fg);min-width:0">
+    <button class="btn" onclick="navigator.clipboard.writeText('${example}').then(()=>log('info','Copied','URL copied')).catch(()=>log('warn','Copy','Use Ctrl+C'))">Copy</button>`;
+  document.querySelector('#userinfo-field')?.remove();
+  document.querySelectorAll('.section')[3].querySelectorAll('.test-card')[1].appendChild(div);
+}
+
+function testFragment() {
+  const fakeFragment = '#%2Fadmin%2Fusers%2F42%3Frole%3Dsuperadmin';
+  location.hash = fakeFragment;
+  log('warn', 'Fragment', `Hash set to: <b>${location.hash}</b> — decoded chars should not affect perceived path`);
+}
+
+// ── 5. Fullscreen / Chrome ────────────────────────────────────────────────
+function enterFS() {
+  const el = document.documentElement;
+  const req = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen;
+  if (req) {
+    req.call(el).then(() => log('warn', 'Fullscreen', 'Active — observe whether Dia hides URL bar. Try "Show overlay" next.')).catch(e => log('warn', 'Fullscreen', `Denied: ${e.message}`));
+  } else {
+    log('warn', 'Fullscreen', 'API unavailable in this context');
+  }
+}
+function exitFS() {
+  const ex = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen;
+  if (ex) ex.call(document).catch(()=>{});
+  log('info', 'Fullscreen', 'Exited');
+}
+
+let fakeBar = null;
+function showFakeBar() {
+  if (fakeBar) return;
+  fakeBar = document.createElement('div');
+  fakeBar.style.cssText = `
+    position:fixed;top:0;left:0;right:0;z-index:2147483647;
+    background:#23272e;border-bottom:1px solid #444;
+    display:flex;align-items:center;gap:8px;
+    padding:6px 14px;font-family:'JetBrains Mono',monospace;font-size:12px;color:#cdd9e5;
+  `;
+  fakeBar.innerHTML = `
+    <svg width="12" height="12" viewBox="0 0 16 16" fill="#57ab5a"><path d="M8 0a8 8 0 100 16A8 8 0 008 0zm3.7 6.7l-4.5 4.5a.75.75 0 01-1.06 0L4.3 9.4a.75.75 0 111.06-1.06L6.7 9.65l4-4a.75.75 0 111.06 1.06z"/></svg>
+    <span style="color:#57ab5a">https://</span>
+    <span>secure-test.example.com/dashboard</span>
+    <span style="margin-left:auto;font-size:10px;background:#e5534b;color:#fff;padding:1px 6px;border-radius:3px;font-weight:600">FAKE OVERLAY — RESEARCH USE ONLY</span>
+  `;
+  document.body.appendChild(fakeBar);
+  log('warn', 'FakeBar', 'Overlay shown. In fullscreen mode (URL bar hidden) this div occupies the bar position. In normal mode, real bar is above it.');
+}
+function removeFakeBar() {
+  if (fakeBar) { fakeBar.remove(); fakeBar = null; log('info', 'FakeBar', 'Overlay removed'); }
+}
+
+let stickyOverlay = null;
+function testStickyOverlay() {
+  if (stickyOverlay) return;
+  stickyOverlay = document.createElement('div');
+  stickyOverlay.style.cssText = `
+    position:sticky;top:0;left:0;right:0;z-index:9000;
+    background:var(--surface);border-bottom:2px solid var(--accent);
+    padding:10px 16px;font-family:'JetBrains Mono',monospace;font-size:12px;
+    color:var(--accent);display:flex;align-items:center;gap:10px;
+  `;
+  stickyOverlay.innerHTML = `<span>🔒</span><span>sticky-overlay-test.example.com/secure</span><span style="margin-left:auto;font-size:10px;color:var(--fg-muted)">← test sticky element</span>`;
+  document.body.insertBefore(stickyOverlay, document.body.firstChild);
+  window.scrollTo(0, 0);
+  log('warn', 'StickyOverlay', 'Sticky element added at top. Scroll to verify real URL bar stays above page content.');
+}
+function removeStickyOverlay() {
+  if (stickyOverlay) { stickyOverlay.remove(); stickyOverlay = null; log('info', 'StickyOverlay', 'Removed'); }
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────
+log('info', 'Init', `Suite ready. Origin: <b>${location.origin}</b>`);
+</script>
